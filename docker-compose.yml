@@ -1,6 +1,7 @@
 services:
   mongodb:
-    image: mongo:latest
+    build: 
+      context: ./docker/mongodb
     container_name: restaurantos-mongodb
     restart: unless-stopped
 
@@ -10,6 +11,15 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: restaurantos-admin
       MONGO_INITDB_ROOT_PASSWORD: restaurantos-password
+
+    command: [
+      "mongod", 
+      "--replSet", 
+      "rs0", 
+      "--bind_ip_all", 
+      "--keyFile",
+      "/etc/mongo-keyfile"
+    ]
 
     volumes:
       - mongodb_data:/data/db
