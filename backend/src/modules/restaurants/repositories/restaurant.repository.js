@@ -1,4 +1,5 @@
 import { Restaurant } from "../models/restaurant.model.js";
+import { flattenObject } from "../../../utils/flatten-object.js";
 
 export async function createRestaurant(restaurantData, session) {
     return Restaurant.create([restaurantData], { session }).then(([restaurant]) => restaurant)
@@ -19,9 +20,10 @@ export async function findRestaurantBySlug(slug, session = null) {
 }
 
 export async function updateRestaurantById(restaurantId, updateData) {
+    const flattenedData = flattenObject(updateData)
     return Restaurant.findByIdAndUpdate(
         restaurantId, 
-        updateData, 
+        flattenedData, 
         { 
             returnDocument: "after", 
             runValidators: true 
