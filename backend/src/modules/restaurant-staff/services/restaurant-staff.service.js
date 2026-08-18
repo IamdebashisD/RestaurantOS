@@ -63,10 +63,10 @@ export async function updateRestaurantStaffService({ restaurantId, staffId, role
     if (
         membership.role === "OWNER" &&
         membership.status === "ACTIVE" && 
-        role !== undefined && 
-        role !== "OWNER" &&
-        status !== undefined &&
-        status === "INACTIVE"
+        (
+            (role !== undefined && role !== "OWNER") ||
+            (status !== undefined && status === "INACTIVE")
+        )
     ) {
         const ownerCount = await countActiveOwnersByRestaurant(restaurantId)
         if(ownerCount <= 1) throw ApiError.conflict("Restaurant must have at least one active owner")
