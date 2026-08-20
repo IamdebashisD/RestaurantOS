@@ -1,7 +1,7 @@
 import { RestaurantTable } from "../models/restaurant-table.model.js"
 
 export async function createRestaurantTable(tableData, session) {
-    return RestaurantTable.create([tableData], { session }).then(([restaurant]) => restaurant)
+    return RestaurantTable.create([tableData], { session }).then(([table]) => table)
 }
 
 export async function findTableById(tableId, session) {
