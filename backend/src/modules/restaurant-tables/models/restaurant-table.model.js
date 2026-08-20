@@ -4,7 +4,7 @@ const restaurantTableSchema = new mongoose.Schema(
     {
         restaurant: {
             type: mongoose.Schema.Types.ObjectId,
-            res: "Restaurant",
+            ref: "Restaurant",
             required: true,
         },
         tableNumber: {
@@ -59,6 +59,6 @@ const restaurantTableSchema = new mongoose.Schema(
  |===============================================================================|
 */
 
-restaurantTableSchema.index({ restaurant: 1, tablenumber: 1 }, { unique: true })
+restaurantTableSchema.index({ restaurant: 1, tableNumber: 1 }, { unique: true })
 
 export const RestaurantTable = mongoose.model("RestaurantTable", restaurantTableSchema)
