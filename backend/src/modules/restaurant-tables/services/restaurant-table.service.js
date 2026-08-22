@@ -7,7 +7,9 @@ import { findRestaurantById } from "../../restaurants/repositories/restaurant.re
 import { 
     createRestaurantTable, 
     findTableByRestaurantAndNumber,
-    findTablesByRestaurant 
+    findTablesByRestaurant,
+    findTableById,
+    updateTableById
 } from "../repositories/restaurant-table.repository.js"
 
 
@@ -57,4 +59,38 @@ export async function getRestaurantTablesService(restaurantId) {
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
     const tables = await findTablesByRestaurant(restaurantId)
     return tables
+}
+
+// Get Restaurant Table by ID
+export async function getRestaurantTableByIdService({ restaurantId, tableId }) { 
+    const table = await findTableById(tableId)
+    if (!table) throw ApiError.notFound("Table not found")
+
+    if (table.restaurant.toString() !== restaurantId) 
+        throw ApiError.notFound("Restaurant table not found")
+
+    return table
+}
+
+// Update Restaurant Table by ID
+export async function updateRestaurantTableService({ restaurantId, tableId, tableNumber, capacity, status }) {
+    const existingTable = await findTableById(tableId)
+    if (!existingTable ) throw ApiError.notFound("Table not found")
+    if (existingTable.restaurant.toString() !== restaurantId) throw ApiError.notFound("Table not found")
+
+    if (tableNumber !== undefined && tableNumber !== existingTable.tableNumber) {
+        const duplicateTable = await findTableByRestaurantAndNumber(restaurantId, tableNumber)
+        if (duplicateTable) throw ApiError.conflict(`Table ${tableNumber} already exists in this restaurant`)
+    }
+
+    const updateData = {}
+    if (tableNumber !== undefined) updateData.tableNumber = tableNumber
+    if (capacity !== undefined) updateData.capacity = capacity
+    if (status !== undefined) updateData.status = status
+
+    if (Object.keys(updateData).length === 0) return existingTable
+
+    const table = await updateTableById(tableId, updateData)
+
+    return table
 }
