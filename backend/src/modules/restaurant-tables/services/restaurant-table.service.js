@@ -52,9 +52,9 @@ export async function createRestaurantTableService({ restaurantId, tableNumber, 
 }
 
 // Get Restaurant all Tables
-export async function getRestaurantTableService(restaurantId) {
+export async function getRestaurantTablesService(restaurantId) {
     const restaurant = await findRestaurantById(restaurantId)
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
-    const table = await findTablesByRestaurant(restaurantId)
-    return table  
+    const tables = await findTablesByRestaurant(restaurantId)
+    return tables
 }

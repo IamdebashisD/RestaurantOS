@@ -23,10 +23,10 @@ export const createRestaurantTableController = catchAsync(async (req, res) => {
     })
 })
 
-export const getRestaurantTableController = catchAsync(async (req, res) => {
+export const getRestaurantTablesController = catchAsync(async (req, res) => {
     const { restaurantId } = req.params
 
-    const tables = await RestaurantTableService.getRestaurantTableService(restaurantId)
+    const tables = await RestaurantTableService.getRestaurantTablesService(restaurantId)
 
     return ApiResponse.success(res, {
         message: "Restaurant tables retrieved successfully",

@@ -7,7 +7,7 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 import validate from "../../../middlewares/validate.middleware.js"
 import { createRestaurantTableDto } from "../dto/create-restaurant-table.dto.js"
 
-import { createRestaurantTableController, getRestaurantTableController } from "../controllers/restaurant-table.controller.js"
+import { createRestaurantTableController, getRestaurantTablesController } from "../controllers/restaurant-table.controller.js"
 
 
 const router = Router()
@@ -37,7 +37,7 @@ router.get(
     "/:restaurantId/tables",
     authenticate,
     requireRestaurantAccess,
-    getRestaurantTableController
+    getRestaurantTablesController
 )
 
 export default router
