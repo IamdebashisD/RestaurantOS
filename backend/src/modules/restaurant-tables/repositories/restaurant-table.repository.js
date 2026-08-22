@@ -24,3 +24,16 @@ export async function findTablesByRestaurant(restaurantId, session) {
     if (session) query.session(session)
     return query
 }
+
+export async function updateTableById(tableId, updateData, session) {
+    const query = RestaurantTable.findByIdAndUpdate(
+        tableId, 
+        { $set: updateData }, 
+        { 
+            returnDocument: "after", 
+            runValidators: true 
+        }
+    )
+    if (session) query.session(session)
+    return query
+}
