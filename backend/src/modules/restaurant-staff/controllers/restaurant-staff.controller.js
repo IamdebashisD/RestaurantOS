@@ -57,6 +57,8 @@ export const removeRestaurantStaffController = catchAsync(async (req, res, _) =>
     const memebership = await RestaurantStaffService.removeRestaurantStaffService({ restaurantId, staffId })
     return ApiResponse.success(res, {
         message: "Staff member removed successfully",
-        data: memebership,
+        data: {
+            memebership
+        },
     })
 })
