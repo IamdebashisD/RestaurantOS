@@ -6,8 +6,14 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 
 import validate from "../../../middlewares/validate.middleware.js"
 import { createRestaurantTableDto } from "../dto/create-restaurant-table.dto.js"
+import { updateRestaurantTableDto } from "../dto/update-restaurant-table.dto.js"
 
-import { createRestaurantTableController, getRestaurantTablesController } from "../controllers/restaurant-table.controller.js"
+import { 
+    createRestaurantTableController, 
+    getRestaurantTablesController, 
+    getRestaurantTableController,
+    updateRestaurantTableController,
+} from "../controllers/restaurant-table.controller.js"
 
 
 const router = Router()
@@ -38,6 +44,33 @@ router.get(
     authenticate,
     requireRestaurantAccess,
     getRestaurantTablesController
+)
+
+/**
+ * @route GET /api/v1/restaurants/:restaurantId/tables/:tableId
+ * @desc  Get a specific restaurant tables by its ID
+ * @access Private - Restaurant staff
+ */
+
+router.get(
+    "/:restaurantId/tables/:tableId",
+    authenticate,
+    requireRestaurantAccess,
+    getRestaurantTableController
+)
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/tables/:tableId
+ * @desc  Update a restaurant table
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/tables/:tableId",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(updateRestaurantTableDto),
+    updateRestaurantTableController
 )
 
 export default router
