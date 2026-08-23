@@ -13,6 +13,7 @@ import {
     getRestaurantTablesController, 
     getRestaurantTableController,
     updateRestaurantTableController,
+    deleteRestaurantTableController,
 } from "../controllers/restaurant-table.controller.js"
 
 
@@ -72,5 +73,19 @@ router.patch(
     validate(updateRestaurantTableDto),
     updateRestaurantTableController
 )
+
+/**
+ * @route DELETE /api/v1/restaurants/:restaurantId/tables/:tableId
+ * @desc  Deactivate a restaurant table
+ * @access Private - OWNER / MANAGER
+ */
+router.delete(
+    "/:restaurantId/tables/:tableId",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    deleteRestaurantTableController
+)
+
 
 export default router
