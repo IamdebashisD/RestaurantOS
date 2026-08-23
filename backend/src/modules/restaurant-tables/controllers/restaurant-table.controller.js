@@ -67,3 +67,16 @@ export const updateRestaurantTableController = catchAsync(async (req, res) => {
         }
     })
 })
+
+export const deleteRestaurantTableController = catchAsync(async (req, res) => {
+    const { restaurantId, tableId } = req.params
+
+    const table = await RestaurantTableService.deleteRestaurantTableService({ restaurantId, tableId })
+
+    return ApiResponse.success(res, {
+        message: "Restaurant table deleted successfully",
+        data: {
+            table
+        }
+    })
+})
