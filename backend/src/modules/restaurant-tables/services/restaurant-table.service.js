@@ -94,3 +94,16 @@ export async function updateRestaurantTableService({ restaurantId, tableId, tabl
 
     return table
 }
+
+// Delete Restaurant Table by ID
+export async function deleteRestaurantTableService({ restaurantId, tableId }) {
+    const existingTable = await findTableById(tableId)
+    
+    if (!existingTable) throw ApiError.notFound("Table not found")
+    if (existingTable.restaurant.toString() !== restaurantId) throw ApiError.notFound("Table not found")
+    if (existingTable.status === "INACTIVE") throw ApiError.notFound("Table not found")
+
+    const deleteTable = await updateTableById(tableId, { status: "INACTIVE" })
+    
+    return deleteTable
+}
