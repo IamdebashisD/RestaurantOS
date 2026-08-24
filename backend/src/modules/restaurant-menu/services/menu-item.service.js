@@ -21,7 +21,7 @@ export async function createMenuItemService({
     image,
     isAvailable
 }) {
-    const restaurant = await findRestaurantById(restaurantId, session)
+    const restaurant = await findRestaurantById(restaurantId)
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
 
     const session = await mongoose.startSession()
