@@ -1,4 +1,4 @@
-import { MenuItem } from "../models/menu-item.model";
+import { MenuItem } from "../models/menu-item.model.js";
 
 export async function createMenuItem(itemData, session) {
     return MenuItem.create([itemData], { session }).then(([item]) => item)
