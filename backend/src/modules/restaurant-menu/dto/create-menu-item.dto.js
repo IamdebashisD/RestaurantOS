@@ -14,7 +14,7 @@ export const createMenuItemDto = z.object({
         .optional()
         .default(""),
 
-    prine: z
+    price: z
         .number()
         .min(0, "Price cannot be negative"),
 
