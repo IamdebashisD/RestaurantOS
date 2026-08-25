@@ -9,6 +9,8 @@ import {
 import {
     createMenuItem,
     findMenuItemsByRestaurant,
+    findMenuItemById,
+    updateMenuItemById,
 } from "../repositories/menu-item.repository.js"
 
 // 1. Create Menu Item
@@ -61,4 +63,52 @@ export async function getRestaurantMenuItemsService(restaurantId) {
     return menuItems
 }
 
+// 3. Get a single menu item
+export async function getMenuItemService({ restaurantId, menuItemId }) {
+    const menuItem = await findMenuItemById(menuItemId)
+    if (!menuItem) throw ApiError.notFound("Menu item not found")
+    if (menuItem.restaurant.toString() !== restaurantId) throw ApiError.notFound("Menu item not found")
+    return menuItem
+}
 
+// 4. Update Menu Item Service
+export async function updateMenuItemService({ 
+    restaurantId,
+    menuItemId,
+    name,
+    description,
+    price,
+    category,
+    image,
+    isAvailable
+}) {
+    const existingMenuItem = await findMenuItemById(menuItemId)
+    if (!existingMenuItem) throw ApiError.notFound("Menu item not found")
+    if (existingMenuItem.restaurant.toString() !== restaurantId) throw ApiError.notFound("Menu item not found")
+    
+    const updateData = {}
+    if (name !== undefined) updateData.name = name
+    if (description !== undefined) updateData.description = description
+    if (price !== undefined) updateData.price = price
+    if (category !== undefined) updateData.category = category
+    if (image !== undefined) updateData.image = image
+    if (isAvailable !== undefined) updateData.isAvailable = isAvailable
+
+    if (Object.keys(updateData).length === 0) return existingMenuItem
+
+    const updatedMenuItem = await updateMenuItemById(menuItemId, updateData)
+
+    return updatedMenuItem
+}
+
+// 5. Disable Menu Item
+export async function deleteMenuItemService({ restaurantId, menuItemId }) {
+    const existingMenuItem = await findMenuItemById(menuItemId)
+    if (!existingMenuItem) throw ApiError.notFound("Menu item not found")
+    if (existingMenuItem.restaurant.toString() !== restaurantId) throw ApiError.notFound("Menu item not found")
+    if (!existingMenuItem.isAvailable) throw ApiError.notFound("Menu item not found")
+
+    const deleteMenuItem = await updateMenuItemById(menuItemId, { isAvailable: false })
+
+    return deleteMenuItem
+}
