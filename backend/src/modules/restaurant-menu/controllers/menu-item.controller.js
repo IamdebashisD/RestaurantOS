@@ -48,3 +48,61 @@ export const getRestaurantMenuItemsController = catchAsync(async (req, res) => {
     })
 })
 
+// Controller - 3. Get a Single Menu Item
+export const getMenuItemController = catchAsync(async (req, res) => {
+    const { restaurantId, menuItemId } = req.params
+
+    const menuItem = await MenuItemService.getMenuItemService({ restaurantId, menuItemId })
+
+    return ApiResponse.success(res, {
+        message: "Menu item retrieved successfully",
+        data: {
+            menuItem
+        }
+    })
+})
+
+// Controller - 4. Update Menu Item
+export const updateMenuItemController = catchAsync(async (req, res) => {
+    const { restaurantId, menuItemId } = req.params
+    const { 
+        name,
+        description,
+        price,
+        category,
+        image,
+        isAvailable 
+    } = req.body
+    
+    const menuItem = await MenuItemService.updateMenuItemService({ 
+        restaurantId,
+        menuItemId,
+        name,
+        description, 
+        price,
+        category,
+        image,
+        isAvailable
+    })
+    
+    return ApiResponse.success(res, {
+        message: "Menu item updated successfully",
+        data: {
+            menuItem
+        }
+    })
+})
+
+// Controller - 5. Disable Menu Item
+export const deleteMenuItemController = catchAsync(async (req, res) => {
+    const { restaurantId, menuItemId } = req.params
+    
+    const menuItem = await MenuItemService.deleteMenuItemService({ restaurantId, menuItemId })
+
+    return ApiResponse.success(res, {
+        message: "Menu item removed successfully",
+        data: {
+            menuItem
+        }
+    })
+})
