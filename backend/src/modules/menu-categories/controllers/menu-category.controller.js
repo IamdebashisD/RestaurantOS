@@ -78,7 +78,7 @@ export const updateMenuCategoryController = catchAsync(async (req, res) => {
     })
 })
 
-// 
+// Delete Menu Category
 export const deleteMenuCategoryController = catchAsync(async (req, res) => {
     const { restaurantId, categoryId } = req.params
     const category = await MenuCategoryService.deleteMenuCategoryService({ restaurantId, categoryId })
