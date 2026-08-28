@@ -20,9 +20,10 @@ export const createMenuItemDto = z.object({
 
     category: z
         .string()
-        .trim()
-        .min(2, "Category must be at least 2 characters")
-        .max(100, "Category cannot exceed 100 characters"),
+          .regex(
+            /^[0-9a-fA-F]{24}$/,
+            "Invalid menu category ID"
+        ),
     
     image: z
         .string()
