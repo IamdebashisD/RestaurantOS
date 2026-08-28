@@ -13,6 +13,10 @@ import {
     updateMenuItemById,
 } from "../repositories/menu-item.repository.js"
 
+import {
+    findMenuCategoryById
+} from "../../menu-categories/repositories/menu-category.repository.js"
+
 // 1. Create Menu Item
 export async function createMenuItemService({
     restaurantId,
@@ -31,6 +35,18 @@ export async function createMenuItemService({
     try {
         let menuItem
         await session.withTransaction(async () => {
+
+            // Check menu category exists
+            const menuCategory = await findMenuCategoryById(category, session)
+            if (!menuCategory) throw ApiError.notFound("Menu category not found")
+            
+            const categoryRestaurantId = menuCategory.restaurant._id 
+                ? menuCategory.restaurant._id.toString() 
+                : menuCategory.restaurant.toString()
+
+            if (categoryRestaurantId !== restaurantId) throw ApiError.notFound("Menu category not found")
+            if (!menuCategory.isActive) throw ApiError.conflict("Cannot add menu item to an inactive category")
+
             const itemData = {
                 restaurant: restaurantId,
                 name,
@@ -55,7 +71,7 @@ export async function createMenuItemService({
 
 // 2. Get All Menu Items
 export async function getRestaurantMenuItemsService(restaurantId) {
-    const restaurant = findRestaurantById(restaurantId)
+    const restaurant = await findRestaurantById(restaurantId)
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
 
     const menuItems = await findMenuItemsByRestaurant(restaurantId)
@@ -90,9 +106,24 @@ export async function updateMenuItemService({
     if (name !== undefined) updateData.name = name
     if (description !== undefined) updateData.description = description
     if (price !== undefined) updateData.price = price
-    if (category !== undefined) updateData.category = category
     if (image !== undefined) updateData.image = image
     if (isAvailable !== undefined) updateData.isAvailable = isAvailable
+
+    // Validate category only when category is being changed
+    if (category !== undefined && category !== existingMenuItem.category._id.toString()) {
+        // Check menu category exists
+        const menuCategory = await findMenuCategoryById(category)
+        if (!menuCategory) throw ApiError.notFound("Menu category not found")
+
+       const categoryRestaurantId = menuCategory.restaurant._id
+            ? menuCategory.restaurant._id.toString() 
+            : menuCategory.restaurant.toString()
+
+        if (categoryRestaurantId !== restaurantId) throw ApiError.notFound("Menu category not found")
+        if (!menuCategory.isActive) throw ApiError.conflict("Cannot add menu item to an inactive category")
+            
+        updateData.category = category
+    }
 
     if (Object.keys(updateData).length === 0) return existingMenuItem
 
