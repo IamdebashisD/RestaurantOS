@@ -30,10 +30,9 @@ const menuItemSchema = new mongoose.Schema(
         },
 
         category: {
-            type: String,
-            trim: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "MenuCategory",
             required: true,
-            maxLength: 100,
         },
 
         image: {
