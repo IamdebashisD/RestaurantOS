@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { timeStringSchema } from "./create-reservation.dto.js"
 
 export const updateReservationDto = z.object({
     table: z
@@ -13,23 +14,9 @@ export const updateReservationDto = z.object({
         .min(1, "Reservation date is required")
         .optional(),
 
-    startTime: z
-        .string()
-        .trim()
-        .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            "Start time must be in HH:mm format"
-        )
-        .optional(),
+    startTime: timeStringSchema("Start time must be in HH:mm format").optional(),
 
-    endTime: z
-        .string()
-        .trim()
-        .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            "End time must be in HH:mm format"
-        )
-        .optional(),
+    endTime:  timeStringSchema("End time must be in HH:mm format").optional(),
 
     guests: z
         .number()
@@ -37,4 +24,14 @@ export const updateReservationDto = z.object({
         .min(1, "At least 1 guest is required")
         .optional(),
 
-}).strict()
+})
+.strict()
+.refine((data) => {
+    if (data.startTime !== undefined && data.endTime !== undefined) {
+        return data.startTime < data.endTime
+    }
+    return true
+}, {
+    message: "Start time must be earlier than end time",
+    path: ["startTime"]
+})
