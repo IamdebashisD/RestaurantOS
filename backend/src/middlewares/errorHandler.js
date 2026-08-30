@@ -22,7 +22,7 @@ export function errorHandler(err, req, res, next) {
             statusCode: error.statusCode,
             message: error.message,
             stack: error.stack?.split("\n")[0],
-            details: error.details?.split("\n")[0],
+            details: typeof error.details === "string" ? error.details?.split("\n")[0] : error.details,
         })
     } else {
         if (error.statusCode === 500) {
