@@ -87,3 +87,37 @@ export const cancelReservationController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 6. Confirm Reservation Controller
+export const confirmReservationController = catchAsync(async (req, res) => {
+    const { restaurantId, reservationId } = req.params
+
+    const reservation = await ReservationService.confirmReservationService({
+        restaurantId,
+        reservationId
+    })
+
+    return ApiResponse.success(res, {
+        message: "Reservation confirmed successfully",
+        data: {
+            reservation
+        }
+    })
+})
+
+// 7. Complete Reservation Controller
+export const completeReservationController = catchAsync(async (req, res) => {
+    const { restaurantId, reservationId } = req.params
+
+    const reservation = await ReservationService.completeReservationService({
+        restaurantId,
+        reservationId
+    })
+
+    return ApiResponse.success(res, {
+        message: "Reservation completed successfully",
+        data: {
+            reservation
+        }
+    })
+})
