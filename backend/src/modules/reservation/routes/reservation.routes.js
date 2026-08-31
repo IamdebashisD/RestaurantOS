@@ -14,6 +14,8 @@ import {
     getReservationController,
     updateReservationController,
     cancelReservationController,
+    confirmReservationController,
+    completeReservationController,
 } from "../controllers/reservation.controller.js"
 
 
@@ -85,6 +87,34 @@ router.patch(
     requireRestaurantAccess, 
     requiredRole("OWNER", "MANAGER"),
     cancelReservationController
+)
+
+// 6. Confirm Reservation
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/reservations/:reservationId/confirm
+ * @desc  Confirm a pending reservation
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/reservations/:reservationId/confirm",
+    authenticate,
+    requireRestaurantAccess, 
+    requiredRole("OWNER", "MANAGER"),
+    confirmReservationController
+)
+
+// 7. Complete Reservation
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/reservations/:reservationId/complete
+ * @desc  Complete a confirmed reservation
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/reservations/:reservationId/complete",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    completeReservationController
 )
 
 export default router
