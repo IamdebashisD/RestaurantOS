@@ -254,3 +254,49 @@ export async function cancelReservationService({ restaurantId, reservationId }) 
         throw ApiError.internal("Database error", error)
     }
 }
+
+// 6. Confirmed Reservation
+export async function confirmReservationService({ restaurantId, reservationId }) {
+    const existingReservation  = await findReservationById(reservationId)
+    if (!existingReservation ) throw ApiError.notFound("Reservation not found")
+
+    // Check reservation belongs to restaurant
+    const reservationRestaurantId = existingReservation.restaurant._id 
+        ? existingReservation.restaurant._id.toString() 
+        : existingReservation.restaurant.toString()
+
+    if (reservationRestaurantId !== restaurantId) throw ApiError.notFound("Reservation not found")
+    
+    // Only PENDING reservation can be CONFIRMED
+    // CANCELLED reservation cannot be COMFIRMED 
+    // COMPLETED reservation cannot be COMFIRMED
+    if (existingReservation.status === "CONFIRMED") throw ApiError.conflict("Reservation is already confirmed")
+    if (existingReservation.status === "CANCELLED") throw ApiError.conflict("Cancelled reservation cannot be confirmed")
+    if (existingReservation.status === "COMPLETED") throw ApiError.conflict("Completed reservation cannot be confirmed")
+
+    const confirmedReservation = await updateReservationById(reservationId, { status: "CONFIRMED" })
+
+    return confirmedReservation
+}
+
+// 7. Complete Reservation
+export async function completeReservationService({ restaurantId, reservationId }) {
+    const existingReservation  = await findReservationById(reservationId)
+    if (!existingReservation ) throw ApiError.notFound("Reservation not found")
+        
+    // Check reservation belongs to restaurant
+    const reservationRestaurantId = existingReservation.restaurant._id 
+        ? existingReservation.restaurant._id.toString() 
+        : existingReservation.restaurant.toString()
+
+    if (reservationRestaurantId !== restaurantId) throw ApiError.notFound("Reservation not found")
+    
+    // Only CONFIRMED reservation can be COMPLETED
+    if (existingReservation.status === "PENDING") throw ApiError.conflict("Pending reservation cannot be completed")
+    if (existingReservation.status === "CANCELLED") throw ApiError.conflict("Cancelled reservation cannot be completed")
+    if (existingReservation.status === "COMPLETED") throw ApiError.conflict("Reservation is already completed")
+    
+    const completedReservation = await updateReservationById(reservationId, { status: "COMPLETED" })
+
+    return completedReservation
+}
