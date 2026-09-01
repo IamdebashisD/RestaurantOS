@@ -8,6 +8,7 @@ import restaurantTableRouter from "./restaurant-tables/routes/restaurant-table.r
 import menuItemRouter from "./restaurant-menu/routes/menu-item.routes.js"
 import menuCategoryRouter from "./menu-categories/routes/menu-category.routes.js"
 import reservationRouter from "./reservation/routes/reservation.routes.js"
+import orderRouter from "./orders/routes/order.routes.js"
 
 const rootRouter = Router()
 
@@ -19,5 +20,6 @@ rootRouter.use("/restaurants", restaurantTableRouter)
 rootRouter.use("/restaurants", menuItemRouter)
 rootRouter.use("/restaurants", menuCategoryRouter)
 rootRouter.use("/restaurants", reservationRouter)
+rootRouter.use("/restaurants", orderRouter)
 
 export default rootRouter
