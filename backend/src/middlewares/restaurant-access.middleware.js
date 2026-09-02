@@ -10,7 +10,7 @@ export async function requireRestaurantAccess(req, res, next) {
         if (!restaurantId) throw ApiError.badRequest("Restaurant ID is required")
 
         const membership = await findMembershipByUserAndRestaurant(userId, restaurantId)
-        if (!membership) throw ApiError.forbidden("Yuo do not have access to this restaurant")
+        if (!membership) throw ApiError.forbidden("You do not have access to this restaurant")
         
         req.restaurantMembership = membership
         next()
