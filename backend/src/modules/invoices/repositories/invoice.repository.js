@@ -18,12 +18,15 @@ export async function findInvoiceById(invoiceId, session) {
 }
 
 // 3. Find all Invoice for a Restaurant
-export async function findInvoicesByRestaurant(restaurantId, session) {
+export async function findInvoicesByRestaurant(restaurantId, options = {}, session) {
     const query = Invoice
         .find({ restaurant: restaurantId })
         .sort({ createdAt: -1 })
         .populate("customer", "name email")
         .populate("table", "tableNumber capacity")
+
+    if (options.skip !== undefined)  query.skip(options.skip)
+    if (options.limit !== undefined) query.limit(options.limit)
 
     if (session) query.session(session)
     return query.exec() 
