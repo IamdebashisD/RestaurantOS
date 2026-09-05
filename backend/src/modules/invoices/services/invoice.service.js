@@ -173,7 +173,9 @@ export async function markInvoiceAsPaidService({ restaurantId, invoiceId }) {
     const invoiceRestaurantId = preCheckInvoice.restaurant?._id?.toString() ?? preCheckInvoice.restaurant?.toString()
     if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
     
-    if (preCheckInvoice.status !== "ISSUED") throw ApiError.conflict(`Invoice cannot be marked as paid from ${preCheckInvoice.status} status`)
+    if (preCheckInvoice.status !== "ISSUED") {
+        throw ApiError.conflict(`Invoice cannot be marked as paid from ${preCheckInvoice.status} status`)
+    }
     
     // Start a Transaction
     const session = await mongoose.startSession()
