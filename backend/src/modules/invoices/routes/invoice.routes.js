@@ -13,6 +13,8 @@ import {
     getRestaurantInvoicesController,
     getInvoiceByOrderController,
     getInvoiceByNumberController,
+    markInvoiceAsPaidController,
+    cancelInvoiceController,
 } from "../controllers/invoice.controller.js"
 
 
@@ -81,6 +83,32 @@ router.get(
     requireRestaurantAccess,
     requiredRole("OWNER", "MANAGER"),
     getInvoiceByNumberController
+)
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/invoices/:invoiceId/pay
+ * @desc  Mark an invoice as paid
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/invoices/:invoiceId/pay",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    markInvoiceAsPaidController
+)
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/invoices/:invoiceId/cancel
+ * @desc  Cancel an invoice
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/invoices/:invoiceId/cancel",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    cancelInvoiceController
 )
 
 
