@@ -9,17 +9,19 @@ import menuItemRouter from "./restaurant-menu/routes/menu-item.routes.js"
 import menuCategoryRouter from "./menu-categories/routes/menu-category.routes.js"
 import reservationRouter from "./reservation/routes/reservation.routes.js"
 import orderRouter from "./orders/routes/order.routes.js"
+import invoiceRouter from "./invoices/routes/invoice.routes.js"
 
 const rootRouter = Router()
 
 rootRouter.use("/auth", authRouter)
 rootRouter.use("/users", userRouter)
-rootRouter.use("/restaurants", restaurantRouter, )
+rootRouter.use("/restaurants", restaurantRouter)
 rootRouter.use("/restaurants", restaurantStaffRouter)
 rootRouter.use("/restaurants", restaurantTableRouter)
 rootRouter.use("/restaurants", menuItemRouter)
 rootRouter.use("/restaurants", menuCategoryRouter)
 rootRouter.use("/restaurants", reservationRouter)
 rootRouter.use("/restaurants", orderRouter)
+rootRouter.use("/restaurants", invoiceRouter)
 
 export default rootRouter
