@@ -79,3 +79,31 @@ export const getInvoiceByNumberController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 6. Mark Invoice as Paid Controller
+export const markInvoiceAsPaidController = catchAsync(async (req, res) => {
+    const { restaurantId, invoiceId }  = req.params
+    const paidInvoice = await InvoiceService.markInvoiceAsPaidService({ restaurantId, invoiceId })
+    return ApiResponse.success(res, {
+        message: "Invoice marked as paid successfully",
+        data: {
+            paidInvoice
+        }
+    })
+})
+
+
+// 7. Cancel Invoice Controller
+export const cancelInvoiceController = catchAsync(async (req, res) => {
+    const { restaurantId, invoiceId } = req.params
+    console.log({ restaurantId, invoiceId })
+
+    const invoice = await InvoiceService.cancelInvoiceService({ restaurantId, invoiceId })
+
+    return ApiResponse.success(res, {
+        message: "Invoice cancelled successfully",
+        data: {
+            invoice
+        }
+    })
+})
