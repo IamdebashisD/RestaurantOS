@@ -9,9 +9,10 @@ import {
     findInvoiceById,
     findInvoicesByRestaurant,
     findInvoiceByNumber,
+    updateInvoiceById,
 } from "../repositories/invoice.repository.js"
 
-import { findOrderById } from "../../orders/repositories/order.repository.js"
+import { findOrderById, updateOrderById } from "../../orders/repositories/order.repository.js"
 
 
 
@@ -163,4 +164,97 @@ export async function getInvoiceByNumberService({ restaurantId, invoiceNumber })
     const invoiceRestaurantId = invoice.restaurant?._id?.toString() ?? invoice.restaurant?.toString()
     if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")    
     return invoice
+}
+
+// 6. Mark Invoice as Paid
+export async function markInvoiceAsPaidService({ restaurantId, invoiceId }) {
+    const preCheckInvoice = await findInvoiceById(invoiceId)
+    if (!preCheckInvoice) throw ApiError.notFound("Invoice not found")
+    const invoiceRestaurantId = preCheckInvoice.restaurant?._id?.toString() ?? preCheckInvoice.restaurant?.toString()
+    if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
+    
+    if (preCheckInvoice.status !== "ISSUED") throw ApiError.conflict(`Invoice cannot be marked as paid from ${preCheckInvoice.status} status`)
+    
+    // Start a Transaction
+    const session = await mongoose.startSession()
+    try {
+        let paidInvoice
+
+        await session.withTransaction(async () => {
+            const invoice = await findInvoiceById(invoiceId, session)
+            if (!invoice || invoice.status !== "ISSUED") {
+                throw ApiError.conflict("Invoice state changed during processing window")
+            }
+            
+            // Update the invoice steps
+            paidInvoice = await updateInvoiceById(
+                invoiceId,
+                {
+                    status: "PAID",
+                    paidAt: Date.now() 
+                },
+                session
+            )
+            // Update corresponding order financial tracking state flags
+            const targetOrderId = invoice.order?._id?.toString() ?? invoice.order?.toString()
+            await updateOrderById(
+                targetOrderId,
+                {
+                    paymentStatus: "PAID"
+                },
+                session
+            )
+        })
+
+        return paidInvoice
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Failed to mark invoice as paid due to a database error", 
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
+}
+
+// 7. Cancel Invoice
+export async function cancelInvoiceService({ restaurantId, invoiceId }) {
+    const preCheckInvoice = await findInvoiceById(invoiceId)
+    if (!preCheckInvoice) throw ApiError.notFound("Invoice not found")
+    const invoiceRestaurantId = preCheckInvoice.restaurant?._id?.toString() ?? preCheckInvoice.restaurant?.toString()
+    if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
+    if (preCheckInvoice.status !== "ISSUED") {
+        throw ApiError.conflict(`Invoice cannot be cancelled from ${preCheckInvoice.status} status`)
+    }
+
+    const session = await mongoose.startSession()
+    try {
+        let cancelledInvoice
+
+        await session.withTransaction(async () => {
+            const invoice = await findInvoiceById(invoiceId, session)
+            if (!invoice || invoice.status !== "ISSUED") {
+                throw ApiError.conflict("Invoice state changed during processing window")
+            }
+
+            cancelledInvoice = await updateInvoiceById(
+                invoiceId,
+                { status: "CANCELLED" },
+                session
+            )
+        })
+
+        return cancelledInvoice
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Failed to cancel invoice due to a database error", 
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
 }
