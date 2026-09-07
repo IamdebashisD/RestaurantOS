@@ -260,3 +260,53 @@ export async function cancelInvoiceService({ restaurantId, invoiceId }) {
         await session.endSession()
     }
 }
+
+// 8. Refund Invoice
+export async function refundInvoiceService({ restaurantId, invoiceId }) {
+    const preCheckInvoice = await findInvoiceById(invoiceId)
+    if (!preCheckInvoice) throw ApiError.notFound("Invoice not found")
+    const invoiceRestaurantId = preCheckInvoice.restaurant?._id?.toString() ?? preCheckInvoice.restaurant?.toString()
+    if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
+    if (preCheckInvoice.status !== "PAID") {
+        throw ApiError.conflict(`Invoice cannot be refunded from ${preCheckInvoice.status} status`)
+    }
+    
+    const session = await mongoose.startSession()
+
+    try {
+        let refundedInvoice
+
+        await session.withTransaction(async () => {
+            // Re-verify inside the transaction snapshot window for atomic concurrency protection
+            const invoice = await findInvoiceById(invoiceId, session)
+            if (!invoice) throw ApiError.conflict("Invoice not found")
+            if (invoice.status !== "PAID") {
+                throw ApiError.conflict(`Invoice cannot be refunded from ${invoice.status} status`)
+            }
+
+            refundedInvoice = await updateInvoiceById(
+                invoiceId,
+                { status: "REFUNDED" },
+                session
+            )
+
+            const targetOrderId = invoice.order?._id?.toString() ?? invoice.order?.toString()
+            await updateOrderById(
+                targetOrderId,
+                { paymentStatus: "REFUNDED" },
+                session
+            )
+        })
+
+        return refundedInvoice
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Failed to refund invoice due to a database error", 
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
+}
