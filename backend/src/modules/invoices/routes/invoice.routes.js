@@ -15,6 +15,7 @@ import {
     getInvoiceByNumberController,
     markInvoiceAsPaidController,
     cancelInvoiceController,
+    refundInvoiceController,
 } from "../controllers/invoice.controller.js"
 
 
@@ -110,6 +111,20 @@ router.patch(
     requiredRole("OWNER", "MANAGER"),
     cancelInvoiceController
 )
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/invoices/:invoiceId/refund
+ * @desc  Refund an invoice
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/invoices/:invoiceId/refund",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    refundInvoiceController
+)
+
 
 
 export default router
