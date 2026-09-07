@@ -107,3 +107,17 @@ export const cancelInvoiceController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 8. Refund Invoice Controller
+export const refundInvoiceController = catchAsync(async (req, res) => {
+    const { restaurantId, invoiceId } = req.params
+
+    const invoice = await InvoiceService.refundInvoiceService({ restaurantId, invoiceId })
+
+    return ApiResponse.success(res, {
+        message: "Invoice refunded successfully",
+        data: {
+            invoice
+        }
+    })
+})
