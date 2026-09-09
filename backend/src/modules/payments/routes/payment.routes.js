@@ -10,6 +10,7 @@ import { createPaymentDto } from "../dto/create-payment.dto.js"
 import {
     createPaymentController,
     getPaymentByIdController,
+    getRestaurantPaymentsController,
 } from "../controllers/payment.controller.js"
 
 
@@ -43,5 +44,17 @@ router.get(
     getPaymentByIdController
 )
 
+/**
+ * @route GET /api/v1/restaurants/:restaurantId/payments
+ * @desc Get all payments for a restaurant
+ * @access Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/payments",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getRestaurantPaymentsController
+)
 
 export default router
