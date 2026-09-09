@@ -6,6 +6,8 @@ import {
     createPayment,
     findPaymentByTransactionId,
     findPaymentById,
+    findPaymentsByRestaurant,
+    countPaymentsByRestaurant,
 } from "../repositories/payment.repository.js"
 
 import { findInvoiceById, updateInvoiceById } from "../../invoices/repositories/invoice.repository.js"
@@ -98,4 +100,27 @@ export async function getPaymentByIdService({ restaurantId, paymentId }) {
     const paymentRestaurantId = payment.restaurant?._id?.toString() ?? payment.restaurant?.toString()
     if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment not found")
     return payment
+}
+
+// Get All Payments for a Restaurant
+export async function getRestaurantPaymentsService({ restaurantId, page = 1, limit = 10 }) {
+    //Basic pagination calculation
+    const parsedPage = Math.max(1, parseInt(page, 10))
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10)))
+    const skip = (parsedPage - 1) * parsedLimit
+
+    const [payments, totalItems] = await Promise.all([
+        findPaymentsByRestaurant({ restaurantId, options: { skip, limit: parsedLimit } }),
+        countPaymentsByRestaurant(restaurantId)
+    ])
+
+    return {
+        payments,
+        pagination: {
+            page: parsedPage,
+            limit: parsedLimit,
+            totalItems,
+            totalPages: Math.ceil(totalItems / parsedLimit)
+        }
+    }
 }
