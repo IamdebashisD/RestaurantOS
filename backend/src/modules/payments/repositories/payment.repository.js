@@ -106,3 +106,7 @@ export async function updatePaymentById(paymentId, updateData, session) {
 
     return query.exec()
 }
+
+export async function countPaymentsByRestaurant(restaurantId) {
+    return Payment.countDocuments({ restaurant: restaurantId }).exec()
+}
