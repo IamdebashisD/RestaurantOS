@@ -38,3 +38,22 @@ export const getPaymentByIdController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 3. Get All Payments for a Restaurant Controller
+export const getRestaurantPaymentsController = catchAsync(async (req, res) => {
+    const { restaurantId } = req.params
+    const { page = 1, limit = 10 } = req.query
+
+    const payments = await PaymentService.getRestaurantPaymentsService({
+        restaurantId,
+        page: Number(page),
+        limit: Number(limit)
+    })
+
+    return ApiResponse.success(res, {
+        message: "Payments fetched successfully",
+        data: {
+            payments
+        }
+    })
+})
