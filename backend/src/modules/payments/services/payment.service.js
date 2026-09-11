@@ -8,6 +8,7 @@ import {
     findPaymentById,
     findPaymentsByRestaurant,
     countPaymentsByRestaurant,
+    findPaymentsByInvoice,
 } from "../repositories/payment.repository.js"
 
 import { findInvoiceById, updateInvoiceById } from "../../invoices/repositories/invoice.repository.js"
@@ -123,4 +124,13 @@ export async function getRestaurantPaymentsService({ restaurantId, page = 1, lim
             totalPages: Math.ceil(totalItems / parsedLimit)
         }
     }
+}
+
+// Get Payments by Invoice
+export async function getPaymentsByInvoiceService({ restaurantId, invoiceId }) {
+    const invoice = await findInvoiceById(invoiceId)
+    if (!invoice) throw ApiError.notFound("Invoice not found")
+    const invoiceRestaurantId = invoice.restaurant?._id?.toString() ?? invoice.restaurant?.toString()
+    if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
+    return await findPaymentsByInvoice(invoiceId)
 }
