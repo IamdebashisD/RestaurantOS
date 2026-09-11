@@ -57,3 +57,17 @@ export const getRestaurantPaymentsController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 4. Get Payments by Invoice Controller
+export const getPaymentsByInvoiceController = catchAsync(async (req, res) => {
+    const { restaurantId, invoiceId } = req.params
+
+    const payments = await PaymentService.getPaymentsByInvoiceService({ restaurantId, invoiceId })
+
+    return ApiResponse.success(res, {
+        message: "Payments fetched successfully",
+        data: {
+            payments
+        }
+    })
+})
