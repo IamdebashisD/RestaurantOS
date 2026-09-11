@@ -38,7 +38,7 @@ export async function findPaymentsByRestaurant({ restaurantId, options={}, sessi
 }
 
 // 4. Find Payments By Invoice
-export async function findPaymentByInvoice(invoiceId, session) {
+export async function findPaymentsByInvoice(invoiceId, session) {
     const query = Payment
         .find({ invoice: invoiceId })
         .sort({ createdAt: -1 })
