@@ -11,6 +11,7 @@ import {
     createPaymentController,
     getPaymentByIdController,
     getRestaurantPaymentsController,
+    getPaymentsByInvoiceController,
 } from "../controllers/payment.controller.js"
 
 
