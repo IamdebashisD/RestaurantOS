@@ -57,4 +57,18 @@ router.get(
     getRestaurantPaymentsController
 )
 
+/**
+ * @route GET /api/v1/restaurants/:restaurantId/invoices/:invoiceId/payments
+ * @desc Get payments for an invoice
+ * @access Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/invoices/:invoiceId/payments",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getPaymentsByInvoiceController
+)
+
+
 export default router
