@@ -12,6 +12,8 @@ import {
     getPaymentByIdController,
     getRestaurantPaymentsController,
     getPaymentsByInvoiceController,
+    getPaymentsByOrderController,
+    getPaymentByNumberController,
 } from "../controllers/payment.controller.js"
 
 
@@ -69,6 +71,32 @@ router.get(
     requireRestaurantAccess,
     requiredRole("OWNER", "MANAGER"),
     getPaymentsByInvoiceController
+)
+
+/**
+ * @route GET /api/v1/restaurants/:restaurantId/orders/:orderId/payments
+ * @desc Get payments for an order
+ * @access Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/orders/:orderId/payments",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getPaymentsByOrderController
+)
+
+/**
+ * @route   GET /api/v1/restaurants/:restaurantId/payments/number/:paymentNumber
+ * @desc    Lookup a detailed transaction record using its unique ledger token
+ * @access  Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/payments/number/:paymentNumber",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getPaymentByNumberController
 )
 
 
