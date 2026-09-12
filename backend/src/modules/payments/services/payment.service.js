@@ -9,10 +9,12 @@ import {
     findPaymentsByRestaurant,
     countPaymentsByRestaurant,
     findPaymentsByInvoice,
+    findPaymentsByOrder,
+    findPaymentByNumber,
 } from "../repositories/payment.repository.js"
 
 import { findInvoiceById, updateInvoiceById } from "../../invoices/repositories/invoice.repository.js"
-import { updateOrderById } from "../../orders/repositories/order.repository.js"
+import { findOrderById, updateOrderById } from "../../orders/repositories/order.repository.js"
 import { updateTableById } from "../../restaurant-tables/repositories/restaurant-table.repository.js"
 
 
@@ -133,4 +135,25 @@ export async function getPaymentsByInvoiceService({ restaurantId, invoiceId }) {
     const invoiceRestaurantId = invoice.restaurant?._id?.toString() ?? invoice.restaurant?.toString()
     if (invoiceRestaurantId !== restaurantId) throw ApiError.notFound("Invoice not found")
     return await findPaymentsByInvoice(invoiceId)
+}
+
+// Get Payments by Order
+export async function getPaymentsByOrderService({ restaurantId, orderId }) {
+    const order = await findOrderById(orderId)
+    if (!order) throw ApiError.notFound("Order not found")
+    const orderRestaurantId = order.restaurant?._id?.toString() ?? order.restaurant?.toString()
+    if (orderRestaurantId !== restaurantId) throw ApiError.notFound("Order not found")
+    return await findPaymentsByOrder(orderId)
+}
+
+// Get Payments by payment-number
+export async function getPaymentByNumberService({ restaurantId, paymentNumber }) {
+    if (!paymentNumber) {
+        throw ApiError.badRequest("Payment number reference is required for lookups")
+    }
+    const payment = await findPaymentByNumber(paymentNumber.trim())
+    if (!payment) throw ApiError.notFound("Payment record not found")
+    const paymentRestaurantId = payment.restaurant?._id?.toString() ?? payment.restaurant?.toString()
+    if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment record not found")
+    return payment
 }
