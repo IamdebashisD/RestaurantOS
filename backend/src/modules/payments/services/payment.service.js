@@ -11,6 +11,7 @@ import {
     findPaymentsByInvoice,
     findPaymentsByOrder,
     findPaymentByNumber,
+    updatePaymentById,
 } from "../repositories/payment.repository.js"
 
 import { findInvoiceById, updateInvoiceById } from "../../invoices/repositories/invoice.repository.js"
@@ -68,6 +69,7 @@ export async function createPaymentService({
                     method,
                     status: "COMPLETED",
                     transactionId,
+                    paidAt: new Date(),
                     gatewayMetadata
                 }, 
                 session
@@ -87,7 +89,7 @@ export async function createPaymentService({
 
     } catch (error) {
         if (error instanceof ApiError) throw error
-        ApiError.internal(
+        throw ApiError.internal(
             "Failed to create payment due to a database error",
             error
         )
@@ -156,4 +158,84 @@ export async function getPaymentByNumberService({ restaurantId, paymentNumber })
     const paymentRestaurantId = payment.restaurant?._id?.toString() ?? payment.restaurant?.toString()
     if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment record not found")
     return payment
+}
+
+// 7. Get Payment by Transaction ID
+export async function getPaymentByTransactionIdService({ restaurantId, transactionId }) {
+    if (!transactionId?.trim()) throw ApiError.badRequest("Transaction ID is required for lookup")
+    const payment = await findPaymentByTransactionId(transactionId.trim())
+    if (!payment) throw ApiError.notFound("Payment record not found")
+    const paymentRestaurantId = payment.restaurant?._id?.toString() ?? payment.restaurant?.toString()
+    if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment record not found")
+    return payment
+}
+
+// Get Payment Refund
+export async function getPaymentRefundService({ restaurantId, paymentId }) {
+    const preCheckPayment = await findPaymentById(paymentId)
+    if (!preCheckPayment) throw ApiError.notFound("Payment record not found")
+
+    const paymentRestaurantId = preCheckPayment .restaurant?._id?.toString() ?? preCheckPayment .restaurant?.toString()
+
+    if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment record not found")
+    if (preCheckPayment.status === "REFUNDED") throw ApiError.conflict("Payment has already been refunded")
+    if (preCheckPayment.status !== "COMPLETED") {
+        throw ApiError.conflict(
+            `Payment cannot be refunded from current status: ${preCheckPayment.status}`
+        )
+    }
+
+    const session = await mongoose.startSession()
+    try {
+        let refundedPayment
+
+        await session.withTransaction(async () => {
+            const payment =  await findPaymentById(paymentId, session)
+            if (!payment) throw ApiError.notFound("Payment record was deleted by another process")
+            if (payment.status !== "COMPLETED") throw ApiError.conflict("Payment status changed during processing window")
+            
+            const targetInvoiceId = payment.invoice?._id?.toString() ?? payment.invoice?.toString()
+            const targetOrderId = payment.order?._id?.toString() ?? payment.order?.toString()
+
+            // Step 1: Update the Payment Ledger item status to REFUNDED
+            refundedPayment = await updatePaymentById(paymentId,
+                {
+            
+                    status: "REFUNDED",
+                    refundedAt: new Date()
+                }, 
+                session
+            )
+            // Step 2: Cascade the financial reversal to the Invoice document
+            if (targetInvoiceId) {
+                await updateInvoiceById(
+                    targetInvoiceId,
+                    { status: "REFUNDED" },
+                    session
+                )
+            }
+
+            if (targetOrderId) {
+                await updateOrderById(
+                    targetOrderId,
+                    {
+                        paymentStatus: "REFUNDED",
+                        status: "CANCELLED"
+                    },
+                    session
+                )
+            }
+        })
+
+        return refundedPayment
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Database system failure during transaction reversal execution",
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
 }
