@@ -113,3 +113,22 @@ export const getPaymentByTransactionIdController = catchAsync(async (req, res) =
         }
     })
 })
+
+// 8. Refund Payment Controller
+export const refundPaymentController = catchAsync(async (req, res) => {
+    const { restaurantId, paymentId } = req.params
+    const { refundReason } = req.body
+
+    const payment = await PaymentService.refundPaymentService({
+        restaurantId,
+        paymentId,
+        refundReason
+    })
+
+    return ApiResponse.success(res, {
+        message: "Payment refunded successfully",
+        data: {
+            payment
+        }
+    })
+})
