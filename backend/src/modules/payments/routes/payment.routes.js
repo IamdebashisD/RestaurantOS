@@ -6,6 +6,7 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 
 import validate from "../../../middlewares/validate.middleware.js"
 import { createPaymentDto } from "../dto/create-payment.dto.js"
+import { refundPaymentDto } from "../dto/refund-payment.dto.js"
 
 import {
     createPaymentController,
@@ -15,6 +16,7 @@ import {
     getPaymentsByOrderController,
     getPaymentByNumberController,
     getPaymentByTransactionIdController,
+    refundPaymentController,
 } from "../controllers/payment.controller.js"
 
 
@@ -111,6 +113,20 @@ router.get(
     requireRestaurantAccess,
     requiredRole("OWNER", "MANAGER"),
     getPaymentByTransactionIdController
+)
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/payments/:paymentId/refund
+ * @desc Refund a completed payment
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/payments/:paymentId/refund",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(refundPaymentDto),
+    refundPaymentController
 )
 
 export default router
