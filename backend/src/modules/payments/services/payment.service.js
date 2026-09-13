@@ -171,13 +171,13 @@ export async function getPaymentByTransactionIdService({ restaurantId, transacti
 }
 
 // Get Payment Refund
-export async function getPaymentRefundService({ restaurantId, paymentId }) {
+export async function refundPaymentService({ restaurantId, paymentId, refundReason = null }) {
     const preCheckPayment = await findPaymentById(paymentId)
     if (!preCheckPayment) throw ApiError.notFound("Payment record not found")
 
     const paymentRestaurantId = preCheckPayment .restaurant?._id?.toString() ?? preCheckPayment .restaurant?.toString()
-
     if (paymentRestaurantId !== restaurantId) throw ApiError.notFound("Payment record not found")
+
     if (preCheckPayment.status === "REFUNDED") throw ApiError.conflict("Payment has already been refunded")
     if (preCheckPayment.status !== "COMPLETED") {
         throw ApiError.conflict(
@@ -197,12 +197,25 @@ export async function getPaymentRefundService({ restaurantId, paymentId }) {
             const targetInvoiceId = payment.invoice?._id?.toString() ?? payment.invoice?.toString()
             const targetOrderId = payment.order?._id?.toString() ?? payment.order?.toString()
 
+            if (!targetInvoiceId) throw ApiError.internal("Payment is missing its invoice reference")
+            
+            const invoice = await findInvoiceById(targetInvoiceId, session)
+
+            if (!invoice) throw ApiError.notFound("Invoice not found")
+            if (invoice.status !== "PAID") {
+                throw ApiError.conflict(
+                    `Invoice cannot be refunded from current status: ${invoice.status}`
+                )
+            }
+
             // Step 1: Update the Payment Ledger item status to REFUNDED
-            refundedPayment = await updatePaymentById(paymentId,
+            refundedPayment = await updatePaymentById(
+                paymentId,
                 {
             
                     status: "REFUNDED",
-                    refundedAt: new Date()
+                    refundedAt: new Date(),
+                    refundReason
                 }, 
                 session
             )
@@ -214,7 +227,7 @@ export async function getPaymentRefundService({ restaurantId, paymentId }) {
                     session
                 )
             }
-
+            // Step 3: Cancel Order
             if (targetOrderId) {
                 await updateOrderById(
                     targetOrderId,
