@@ -14,6 +14,7 @@ import {
     getPaymentsByInvoiceController,
     getPaymentsByOrderController,
     getPaymentByNumberController,
+    getPaymentByTransactionIdController,
 } from "../controllers/payment.controller.js"
 
 
@@ -99,5 +100,17 @@ router.get(
     getPaymentByNumberController
 )
 
+/**
+ * @route GET /api/v1/restaurants/:restaurantId/payments/transaction/:transactionId
+ * @desc Get payment using its transaction ID
+ * @access Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/payments/transaction/:transactionId",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getPaymentByTransactionIdController
+)
 
 export default router
