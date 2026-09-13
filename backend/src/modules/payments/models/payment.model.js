@@ -80,6 +80,13 @@ const paymentSchema = new mongoose.Schema(
             default: null,
         },
 
+        refundReason: {
+            type: String,
+            trim: true,
+            maxLength: 500,
+            default: null,
+        },
+
         gatewayMetadata: {
             type: mongoose.Schema.Types.Mixed,
             default: {}
