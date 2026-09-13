@@ -99,3 +99,17 @@ export const getPaymentByNumberController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 7. Get Payment by Transaction ID
+export const getPaymentByTransactionIdController = catchAsync(async (req, res) => {
+    const { restaurantId, transactionId } = req.params
+
+    const payment = await PaymentService.getPaymentByTransactionIdService({ restaurantId, transactionId })
+
+    return ApiResponse.success(res, {
+        message: "Payment fetched successfully",
+        data: {
+            payment
+        }
+    })
+})
