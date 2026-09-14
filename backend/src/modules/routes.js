@@ -11,6 +11,7 @@ import reservationRouter from "./reservation/routes/reservation.routes.js"
 import orderRouter from "./orders/routes/order.routes.js"
 import invoiceRouter from "./invoices/routes/invoice.routes.js"
 import paymentRouter from "./payments/routes/payment.routes.js"
+import inventoryRouter from "./inventory/routes/inventory.route.js"
 
 const rootRouter = Router()
 
@@ -25,5 +26,6 @@ rootRouter.use("/restaurants", reservationRouter)
 rootRouter.use("/restaurants", orderRouter)
 rootRouter.use("/restaurants", invoiceRouter)
 rootRouter.use("/restaurants", paymentRouter)
+rootRouter.use("/restaurants", inventoryRouter)
 
 export default rootRouter
