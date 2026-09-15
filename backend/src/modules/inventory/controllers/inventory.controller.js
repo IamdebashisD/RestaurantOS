@@ -39,3 +39,37 @@ export const getRestaurantInventoryController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 3. Get Inventory Item by ID Controller
+export const getInventoryItemByIdController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const inventoryItem = await InventoryService.getInventoryItemByIdService({ restaurantId, itemId })
+    return ApiResponse.success(res, {
+        message: "Inventory fetched successfully",
+        data: {
+            inventoryItem
+        }
+    })
+})
+
+// 4. Update Inventory Item Controller
+export const updateInventoryItemController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { name, minimumQuantity, costPerUnit, status  } = req.body
+
+    const inventory = await InventoryService.updateInventoryItemService({
+        restaurantId,
+        itemId,
+        name,
+        minimumQuantity,
+        costPerUnit,
+        status
+    })
+
+    return ApiResponse.success(res, {
+        message: "Inventory item updated successfully",
+        data: {
+            inventory
+        }
+    })
+})
