@@ -8,6 +8,8 @@ import {
     findInventoryItemByName,
     findInventoryByRestaurant,
     countInventoryByRestaurant,
+    findInventoryItemById,
+    updateInventoryItemById,
 } from "../repositories/inventory.repository.js"
 
 
@@ -95,4 +97,78 @@ export async function getRestaurantInventoryService({ restaurantId, page = 1 , l
             hasPrevPage: parsedPage > 1
         }
     }
+}
+
+/**
+ * 3. Get Inventory Item by ID
+ * Retrieves a single inventory item belonging to a specific restaurant.
+ */
+export async function getInventoryItemByIdService({ restaurantId, itemId }) {
+    const inventoryItem = await findInventoryItemById(itemId)
+    if (!inventoryItem) throw ApiError.notFound("Inventory item not found")
+    const inventoryRestaurantId = inventoryItem.restaurant?._id?.toString() ?? inventoryItem.restaurant?.toString()
+    if (inventoryRestaurantId !== restaurantId) throw ApiError.notFound("Inventory item not found")
+    return inventoryItem
+}
+
+/**
+ * 4. Update Inventory Item
+ * Updates inventory metadata without directly modifying stock quantity.
+ */
+export async function updateInventoryItemService({
+    restaurantId,
+    itemId, 
+    name, 
+    minimumQuantity, 
+    costPerUnit, 
+    status 
+}) {
+    const existingItem = await findInventoryItemById(itemId)
+    if (!existingItem) throw ApiError.notFound("Inventory item not found")
+    const inventoryRestaurantId = existingItem.restaurant?._id?.toString() ?? existingItem.restaurant?.toString()
+    if (inventoryRestaurantId !== restaurantId) throw ApiError.notFound("Inventory item not found")
+
+    // Build partial patch dictionary
+    const normalizedUpdateData = {}
+    if (name !== undefined) normalizedUpdateData.name = name.trim()
+    if (minimumQuantity !== undefined) normalizedUpdateData.minimumQuantity = minimumQuantity
+    if (costPerUnit !== undefined) normalizedUpdateData.costPerUnit = costPerUnit
+    if (status !== undefined) normalizedUpdateData.status = status
+    if (Object.keys(normalizedUpdateData).length === 0) return existingItem
+
+    const session = await mongoose.startSession()
+
+    try {
+        let updatedItem
+
+        await session.withTransaction(async () => {
+            if (
+                normalizedUpdateData.name &&
+                normalizedUpdateData.name !== existingItem.name
+            ) {
+                const duplicateItem = await findInventoryItemByName(
+                    restaurantId, 
+                    normalizedUpdateData.name, 
+                    session
+                )
+                if (duplicateItem) {
+                    throw ApiError.conflict(`An inventory item named "${normalizedUpdateData.name}" already exists`)    
+                }
+            }
+
+            updatedItem = await updateInventoryItemById(itemId, normalizedUpdateData, session)
+        })
+
+        return updatedItem
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Failed to update inventory details due to a database error", 
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
+    
 }
