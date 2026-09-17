@@ -22,7 +22,7 @@ export async function findInventoryTransactions(inventoryId, options = {}, sessi
 export async function countInventoryTransactions(inventoryId) {
     return InventoryTransaction.countDocuments({ inventory: inventoryId }).exec()
 }
-// 2. Find a specific ledger transaction record by its unique ID
+// 4. Find a specific ledger transaction record by its unique ID
 export async function findInventoryTransactionById(transactionId, session) {
     const query = InventoryTransaction.findById(transactionId)
         .populate("performedBy", "name email")
