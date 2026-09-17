@@ -11,6 +11,9 @@ import {
     findInventoryItemById,
     updateInventoryItemById,
 } from "../repositories/inventory.repository.js"
+import {
+    createInventoryTransaction,
+} from "../repositories/inventory-transaction.repository.js"
 
 
 /**
@@ -171,4 +174,94 @@ export async function updateInventoryItemService({
         await session.endSession()
     }
     
+}
+
+/**
+ * 5. Stock In
+ * Adds new stock to an inventory item and records the movement
+ * as an inventory transaction.
+ */
+export async function stockInInventoryService({
+    restaurantId,
+    itemId,
+    quantity,
+    costPerUnit,
+    reason,
+    performedBy
+}) {
+    const existingItem = await findInventoryItemById(itemId)
+    if (!existingItem) throw ApiError.notFound("Inventory Item not found")
+    
+    const itemRestaurantId = existingItem.restaurant?._id?.toString() ?? existingItem.restaurant?.toString()
+    if (itemRestaurantId !== restaurantId) throw ApiError.notFound("Inventory Item not found")
+    if (existingItem.status !== "ACTIVE") throw ApiError.conflict("Cannot add stock to an inactive inventory item")
+    
+    const session = await mongoose.startSession()
+    try {
+        let updatedInventory
+
+        await session.withTransaction(async () => {
+            const item = await findInventoryItemById(itemId, session)
+            if (!item || item.status !== "ACTIVE") {
+                throw ApiError.conflict("Inventory item state changed during processing window")
+            }
+
+            //Step 2: Establish the Ledger Mathematical Bounds
+            const previousQuantity = item.currentQuantity
+            const rawResultingQuantity = previousQuantity + quantity
+            const resultingQuantity = Math.round(rawResultingQuantity * 100) / 100
+            
+            const currentCost = costPerUnit !== undefined ? costPerUnit : item.costPerUnit
+
+            let finalNewCostPerUnit = item.costPerUnit
+            if (costPerUnit !== undefined && costPerUnit !== item.costPerUnit) {
+                const totalCurrentValue = previousQuantity * item.costPerUnit
+                const totalIncomingValue = quantity * costPerUnit
+                const totalCombineValue = totalCurrentValue + totalIncomingValue
+
+                // Avoid division by zero if total quantities are empty
+                if (resultingQuantity > 0) {
+                    const rawAverage = totalCombineValue / resultingQuantity
+                    finalNewCostPerUnit = Math.round(rawAverage * 100) / 100
+                }
+            }
+
+            // Update the Parent Inventory Document
+            updatedInventory = await updateInventoryItemById(
+                itemId,
+                {
+                    currentQuantity: resultingQuantity,
+                    costPerUnit: finalNewCostPerUnit
+
+                },
+                session
+            )
+            // Create the Immutable Ledger Log Entry
+            await createInventoryTransaction(
+                {
+                    restaurant: restaurantId,
+                    inventory: itemId,
+                    type: "STOCK_IN",
+                    quantity,
+                    previousQuantity,
+                    resultingQuantity,
+                    costPerUnit: currentCost,
+                    reason: reason?.trim() || "Regular stock replenishment",
+                    performedBy
+                },
+                session
+            )
+        })
+
+        return updatedInventory
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal(
+            "Critical failure executing atomic stock replenishment pipeline", 
+            error
+        )
+    } finally {
+        await session.endSession()
+    }
 }
