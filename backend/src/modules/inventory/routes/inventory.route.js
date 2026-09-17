@@ -7,12 +7,14 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 import validate from "../../../middlewares/validate.middleware.js"
 import { createInventoryDto } from "../dto/create-inventory.dto.js"
 import { updateInventoryDto } from "../dto/update-inventory.dto.js"
+import { stockInDto } from "../dto/stock-in.dto.js"
 
 import {
     createInventoryController,
     getRestaurantInventoryController,
     getInventoryItemByIdController,
     updateInventoryItemController,
+    stockInInventoryController,
 } from "../controllers/inventory.controller.js"
 
 const router = Router()
@@ -71,6 +73,19 @@ router.patch(
     updateInventoryItemController
 )
 
+/**
+ * @route   POST /api/v1/restaurants/:restaurantId/inventory/:itemId/stock-in
+ * @desc    Record an incoming delivery batch influx for a specific inventory ingredient item
+ * @access  Private - OWNER / MANAGER
+ */
+router.post(
+    "/:restaurantId/inventory/:itemId/stock-in",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(stockInDto),
+    stockInInventoryController
+)
 
 
 export default router
