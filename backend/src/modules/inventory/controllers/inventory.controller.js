@@ -73,3 +73,26 @@ export const updateInventoryItemController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// 5. Controller: Processes incoming stock arrivals, updates quantities, and records an audit log
+export const stockInInventoryController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { quantity, costPerUnit, reason } = req.body
+    const performedBy = req.user.id
+
+    const updatedInventory  = await InventoryService.stockInInventoryService({
+        restaurantId,
+        itemId,
+        quantity,
+        costPerUnit,
+        reason,
+        performedBy
+    })
+
+    return ApiResponse.success(res, {
+        message: "Stock replenishment processed and ledger item recorded successfully",
+        data: {
+            updatedInventory
+        }
+    })
+})
