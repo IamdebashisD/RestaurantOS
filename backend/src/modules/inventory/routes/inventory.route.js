@@ -8,6 +8,7 @@ import validate from "../../../middlewares/validate.middleware.js"
 import { createInventoryDto } from "../dto/create-inventory.dto.js"
 import { updateInventoryDto } from "../dto/update-inventory.dto.js"
 import { stockInDto } from "../dto/stock-in.dto.js"
+import { stockOutDto } from "../dto/stock-out.dto.js"
 
 import {
     createInventoryController,
@@ -15,6 +16,7 @@ import {
     getInventoryItemByIdController,
     updateInventoryItemController,
     stockInInventoryController,
+    stockOutInventoryController,
 } from "../controllers/inventory.controller.js"
 
 const router = Router()
@@ -86,6 +88,21 @@ router.post(
     validate(stockInDto),
     stockInInventoryController
 )
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/inventory/:itemId/stock-out
+ * @desc Remove stock from an inventory item
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/inventory/:itemId/stock-out",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(stockOutDto),
+    stockOutInventoryController
+)
+
 
 
 export default router
