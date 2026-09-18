@@ -96,3 +96,31 @@ export const stockInInventoryController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * @desc    Processes kitchen stock depletions, checks minimum thresholds, and records logs
+ * @route   POST /api/v1/restaurants/:restaurantId/inventory/:itemId/stock-out
+ * @access  Private (OWNER, MANAGER)
+ */
+export const stockOutInventoryController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { quantity, reason } = req.body
+    
+    // Extracted securely from user auth token context mapping to protect ledger logs
+    const performedBy = req.user.id
+
+    const updatedInventory = await InventoryService.stockOutInventoryService({
+        restaurantId,
+        itemId,
+        quantity,
+        reason,
+        performedBy
+    })
+
+    return ApiResponse.success(res, {
+        message: "Stock usage logged and inventory adjusted successfully",
+        data: {
+            updatedInventory
+        }
+    })
+})
