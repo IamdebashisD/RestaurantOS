@@ -265,3 +265,85 @@ export async function stockInInventoryService({
         await session.endSession()
     }
 }
+
+/**
+ * 6. Stock Out
+ *
+ * Removes stock from an inventory item and records the movement
+ * as an inventory transaction.
+ *
+ * The operation is atomic:
+ * - Inventory quantity is reduced.
+ * - Inventory transaction is created.
+ *
+ * If either operation fails, the entire transaction is rolled back.
+ */
+export async function stockOutInventoryService({
+    restaurantId,
+    itemId,
+    quantity,
+    reason,
+    performedBy
+}) {
+    const existingItem = await findInventoryItemById(itemId)
+    if (!existingItem) throw ApiError.notFound("Inventory Item not found")
+    
+    const itemRestaurantId = existingItem.restaurant?._id?.toString() ?? existingItem.restaurant?.toString()
+    if (itemRestaurantId !== restaurantId) throw ApiError.notFound("Inventory Item not found")
+    
+    if (existingItem.status !== "ACTIVE") 
+        throw ApiError.conflict("Cannot remove stock from an inactive inventory item")
+
+    const session = await mongoose.startSession()
+    try {
+        let updatedInventory
+
+        await session.withTransaction(async () => {
+            const item = await findInventoryItemById(itemId, session)
+            if (!item) throw  ApiError.notFound("Inventory item was not found during stock-out processing")
+            if (item.status !== "ACTIVE") throw ApiError.conflict("Cannot remove stock from an inactive inventory item")
+            if (item.currentQuantity < quantity) {
+                throw ApiError.conflict(`Insufficient stock. Available quantity is ${item.currentQuantity} ${item.unit}`)
+            }
+
+            // Calculate resulting quantity
+            const previousQuantity = item.currentQuantity
+            const rawResultingQuantity = previousQuantity - quantity
+            const resultingQuantity = Math.round(rawResultingQuantity * 100) / 100
+            // Spanshot current inventory cost
+            const costPerUnit = item.costPerUnit
+
+            //Update inventory quantity
+            updatedInventory = await updateInventoryItemById(
+                itemId,
+                { currentQuantity: resultingQuantity },
+                session
+            )
+            if (!updatedInventory) throw ApiError.notFound("Inventory item could not be updated")
+            
+            // Create inventory movement ledger
+            await createInventoryTransaction(
+                {
+                    restaurant: restaurantId,
+                    inventory: itemId,
+                    type: "STOCK_OUT",
+                    quantity,
+                    previousQuantity,
+                    resultingQuantity,
+                    costPerUnit,
+                    reason: reason?.trim() || "Regular kitchen stock depletion",
+                    performedBy
+                },
+                session
+            )
+        })
+
+        return updatedInventory
+        
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal("Critical failure executing atomic stock-out pipeline", error)
+    } finally {
+        await session.endSession()
+    }
+}
