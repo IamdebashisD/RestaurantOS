@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-const inventoryTransactionSchema  = new mongoose.Schema(
+const inventoryTransactionSchema = new mongoose.Schema(
     {
         restaurant: {
             type: mongoose.Schema.Types.ObjectId,
