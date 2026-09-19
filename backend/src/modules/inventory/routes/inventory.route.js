@@ -9,6 +9,7 @@ import { createInventoryDto } from "../dto/create-inventory.dto.js"
 import { updateInventoryDto } from "../dto/update-inventory.dto.js"
 import { stockInDto } from "../dto/stock-in.dto.js"
 import { stockOutDto } from "../dto/stock-out.dto.js"
+import { stockAdjustmentDto } from "../dto/stock-adjustment.dto.js"
 
 import {
     createInventoryController,
@@ -17,6 +18,7 @@ import {
     updateInventoryItemController,
     stockInInventoryController,
     stockOutInventoryController,
+    stockAdjustmentInventoryController,
 } from "../controllers/inventory.controller.js"
 
 const router = Router()
@@ -101,6 +103,20 @@ router.patch(
     requiredRole("OWNER", "MANAGER"),
     validate(stockOutDto),
     stockOutInventoryController
+)
+
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/inventory/:itemId/adjustment
+ * @desc Adjust inventory quantity to match physical stock OR Execute a physical count correction/balancing log for a specific ingredient
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/inventory/:itemId/adjustment",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(stockAdjustmentDto),
+    stockAdjustmentInventoryController
 )
 
 
