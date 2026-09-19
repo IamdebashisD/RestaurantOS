@@ -347,3 +347,81 @@ export async function stockOutInventoryService({
         await session.endSession()
     }
 }
+
+/**
+ * 7. Stock Adjustment
+ *
+ * Corrects the system inventory quantity so that it matches
+ * the physically counted quantity.
+ *
+ * The operation is atomic:
+ * - Inventory quantity is updated.
+ * - Adjustment is recorded in the inventory transaction ledger.
+ */
+export async function stockAdjustmentInventoryService({
+    restaurantId,
+    itemId,
+    actualQuantity,
+    reason,
+    performedBy
+}) {
+    const existingItem = await findInventoryItemById(itemId)
+    if (!existingItem) throw ApiError.notFound("Inventory Item not found")
+    
+    const itemRestaurantId = existingItem.restaurant?._id?.toString() ?? existingItem.restaurant?.toString()
+    if (itemRestaurantId !== restaurantId) throw ApiError.notFound("Inventory Item not found")
+    
+    if (existingItem.status !== "ACTIVE") throw ApiError.conflict("Cannot adjust an inactive inventory item")
+    // Prevent unnecessary adjustment
+    if (existingItem.currentQuantity === actualQuantity) {
+        throw ApiError.conflict("Inventory quantity already matches the physical quantity")
+    }
+
+    const session = await mongoose.startSession()
+
+    try {
+        let updatedInventory
+
+        await session.withTransaction(async () => {
+            const item = await findInventoryItemById(itemId, session)
+            if (!item) throw ApiError.notFound("Inventory item was not found during adjustment processing")
+            if (item.status !== "ACTIVE") throw ApiError.conflict("Cannot adjust an inactive inventory item")
+            
+            const previousQuantity = item.currentQuantity
+            const rawDifference = actualQuantity - previousQuantity
+            const difference = Math.round(rawDifference * 100) / 100
+            if (difference === 0) throw ApiError.conflict("Inventory quantity already matches the physical quantity")
+            const costPerUnit = item.costPerUnit
+
+            // Update inventory quantity
+            updatedInventory = await updateInventoryItemById(
+                itemId,
+                { currentQuantity: actualQuantity },
+                session
+            )
+            if (!updatedInventory) throw ApiError.notFound("Inventory item could not be updated")
+
+            // Create adjustment ledger entry
+            const ledgerEntry = {
+                restaurant: restaurantId,
+                inventory: itemId,
+                type: "ADJUSTMENT",
+                quantity: Math.abs(difference),
+                previousQuantity,
+                resultingQuantity: actualQuantity,
+                costPerUnit,
+                reason: reason?.trim() || "Physical inventory adjustment",
+                performedBy
+            }
+            await createInventoryTransaction(ledgerEntry, session)
+        })
+
+        return updatedInventory
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal("Critical failure executing atomic inventory adjustment pipeline", error)
+    } finally {
+        await session.endSession()
+    }
+}
