@@ -124,3 +124,30 @@ export const stockOutInventoryController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * @desc    Corrects system stock metrics to match an audited physical shelf count
+ * @route   POST /api/v1/restaurants/:restaurantId/inventory/:itemId/adjustment
+ * @access  Private (OWNER, MANAGER)
+ */
+export const stockAdjustmentInventoryController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { actualQuantity, reason } = req.body
+    const performedBy = req.user.id
+
+    const updatedInventory = await InventoryService
+        .stockAdjustmentInventoryService({
+            restaurantId,
+            itemId,
+            actualQuantity,
+            reason,
+            performedBy
+        })
+
+    return ApiResponse.success(res, {
+        message: "Inventory quantity adjusted and ledger item recorded successfully",
+        data: {
+            updatedInventory
+        }
+    })
+})
