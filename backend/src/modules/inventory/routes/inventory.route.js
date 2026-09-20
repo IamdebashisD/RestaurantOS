@@ -10,6 +10,7 @@ import { updateInventoryDto } from "../dto/update-inventory.dto.js"
 import { stockInDto } from "../dto/stock-in.dto.js"
 import { stockOutDto } from "../dto/stock-out.dto.js"
 import { stockAdjustmentDto } from "../dto/stock-adjustment.dto.js"
+import { wastageDto } from "../dto/wastage.dto.js"
 
 import {
     createInventoryController,
@@ -19,6 +20,7 @@ import {
     stockInInventoryController,
     stockOutInventoryController,
     stockAdjustmentInventoryController,
+    recordInventoryWastageController,
 } from "../controllers/inventory.controller.js"
 
 const router = Router()
@@ -119,6 +121,19 @@ router.patch(
     stockAdjustmentInventoryController
 )
 
+/**
+ * @route PATCH /api/v1/restaurants/:restaurantId/inventory/:itemId/wastage
+ * @desc Record inventory wastage
+ * @access Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/inventory/:itemId/wastage",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(wastageDto),
+    recordInventoryWastageController
+)
 
 
 export default router
