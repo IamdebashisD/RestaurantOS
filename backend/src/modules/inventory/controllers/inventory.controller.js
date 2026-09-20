@@ -151,3 +151,30 @@ export const stockAdjustmentInventoryController = catchAsync(async (req, res) =>
         }
     })
 })
+
+/**
+ * @desc    Logs spoiled, damaged, or expired stock and reduces inventory metrics securely
+ * @route   POST /api/v1/restaurants/:restaurantId/inventory/:itemId/wastage
+ * @access  Private (OWNER, MANAGER)
+ */
+export const recordInventoryWastageController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { quantity, reason } = req.body
+    const performedBy = req.user.id
+
+    const updatedInventory = await InventoryService
+        .recordInventoryWastageService({
+            restaurantId,
+            itemId,
+            quantity,
+            reason,
+            performedBy
+        })
+
+    return ApiResponse.success(res, {
+        message: "Inventory wastage recorded and ledger item created successfully",
+        data: {
+            updatedInventory
+        }
+    })
+})
