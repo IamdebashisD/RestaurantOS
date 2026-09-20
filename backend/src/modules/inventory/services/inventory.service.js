@@ -425,3 +425,83 @@ export async function stockAdjustmentInventoryService({
         await session.endSession()
     }
 }
+
+/**
+ * 8. Wastage
+ *
+ * Removes lost, spoiled, expired, damaged, or otherwise
+ * unusable stock from an inventory item and records the
+ * movement as a WASTAGE inventory transaction.
+ *
+ * The operation is atomic:
+ * - Inventory quantity is reduced.
+ * - Wastage is recorded in the inventory transaction ledger.
+ */
+export async function recordInventoryWastageService({ 
+    restaurantId, 
+    itemId,
+    quantity,
+    reason,
+    performedBy 
+}) {
+    const existingItem = await findInventoryItemById(itemId)
+    if (!existingItem) throw ApiError.notFound("Inventory Item not found")
+    const itemRestaurantId = existingItem.restaurant?._id?.toString() ?? existingItem.restaurant?.toString()
+    if (itemRestaurantId !== restaurantId) throw ApiError.notFound("Inventory Item not found")
+
+    if (existingItem.status !== "ACTIVE") {
+        throw ApiError.conflict(
+            "Cannot record wastage for an inactive inventory item"
+        )
+    }
+
+    const session = await mongoose.startSession()
+
+    try {
+        let updatedInventory
+        await session.withTransaction(async () => {
+            const item = await findInventoryItemById(itemId, session)
+            if (!item) throw ApiError.notFound("Inventory item was not found during wastage processing")
+            if (item.status !== "ACTIVE") throw ApiError.conflict("Cannot record wastage for an inactive inventory item")
+            if (item.currentQuantity < quantity) {
+                throw ApiError.conflict(`Insufficient stock. Available quantity is ${item.currentQuantity} ${item.unit}`)
+            }
+
+            const previousQuantity = item.currentQuantity
+            const rawResultingQuantity = previousQuantity - quantity
+            const resultingQuantity = Math.round(rawResultingQuantity * 100) / 100
+            // spanshot: current inventory cost
+            const costPerUnit = item.costPerUnit
+
+            updatedInventory = await updateInventoryItemById(
+                itemId,
+                { currentQuantity: resultingQuantity },
+                session
+            )
+
+            if (!updatedInventory) throw ApiError.notFound("Inventory item could not be updated")
+            
+            // Create wastage ledger entry
+            const ledgerEntry = {
+                restaurant: restaurantId,
+                inventory: itemId,
+                type: "WASTAGE",
+                quantity,
+                previousQuantity,
+                resultingQuantity,
+                costPerUnit,
+                reason: reason?.trim() || "Unspecified kitchen spoilage or wastage loss",
+                performedBy
+            }
+            await createInventoryTransaction(ledgerEntry, session)
+        })
+
+        return updatedInventory
+
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal("Critical failure executing atomic inventory wastage pipeline", error)
+    } finally {
+        await session.endSession()
+    }
+}
