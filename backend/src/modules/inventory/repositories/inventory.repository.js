@@ -49,3 +49,32 @@ export async function updateInventoryItemById(itemId, updateData, session) {
     if (session) query.session(session)
     return query.exec()
 }
+
+// 7. Find active low-stock inventory items for a restaurant
+export async function findLowStockInventoryByRestaurant(restaurantId, options = {}, session) {
+    const query = Inventory.find({ 
+        restaurant: restaurantId,
+        status: "ACTIVE",
+        $expr: {
+            $lte: ["$currentQuantity", "$minimumQuantity"]
+        }
+    })
+    .sort({ currentQuantity: 1, name: 1 })
+
+    if (options.skip !== undefined) query.skip(options.skip)
+    if (options.limit !== undefined) query.limit(options.limit)
+    if (session) query.session(session)
+        
+    return query.exec()
+}
+
+// 8. Count active low-stock inventory items for a restaurant
+export async function countLowStockInventoryByRestaurant(restaurantId) {
+    return Inventory.countDocuments({
+        restaurant: restaurantId,
+        status: "ACTIVE",
+        $expr: {
+            $lte: ["$currentQuantity", "$minimumQuantity"]
+        }
+    }).exec()
+}
