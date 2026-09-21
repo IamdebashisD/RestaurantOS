@@ -10,9 +10,13 @@ import {
     countInventoryByRestaurant,
     findInventoryItemById,
     updateInventoryItemById,
+    findLowStockInventoryByRestaurant,
+    countLowStockInventoryByRestaurant,
 } from "../repositories/inventory.repository.js"
 import {
     createInventoryTransaction,
+    findInventoryTransactions,
+    countInventoryTransactions,
 } from "../repositories/inventory-transaction.repository.js"
 
 
@@ -503,5 +507,89 @@ export async function recordInventoryWastageService({
         throw ApiError.internal("Critical failure executing atomic inventory wastage pipeline", error)
     } finally {
         await session.endSession()
+    }
+}
+
+// 9. Get low-stock inventory items for a restaurant
+/**
+ * Retrieves a paginated list of active inventory items that have dropped 
+ * below or hit their configured critical minimum safety thresholds.
+ */
+export async function getLowStockAlertService({ restaurantId, page = 1, limit = 10 }) {
+    const restaurant = await findRestaurantById(restaurantId)
+    if (!restaurant) throw ApiError.notFound("Restaurant not found")
+    
+    const rawPage  = typeof page  === "string" ? parseInt(page, 10)  : page
+    const rawLimit = typeof limit === "string" ? parseInt(limit, 10) : limit
+
+    const safePage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
+    const safeLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 10
+    const skip = (safePage - 1) * safeLimit
+
+    const [lowStockItems, totalItems] = await Promise.all([
+        findLowStockInventoryByRestaurant(restaurantId, { skip, limit: safeLimit }),
+        countLowStockInventoryByRestaurant(restaurantId)
+    ])
+
+    const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / safeLimit)
+
+    return {
+        lowStockItems,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            totalItems,
+            totalPages,
+            hasNextPage: safePage < totalPages,
+            hasPrevPage: safePage > 1
+        }
+    }
+}
+
+/**
+ * 10. Get Inventory Transaction Audit Ledger History Feed
+ * 
+ * Compiles a paginated timeline of all stock fluctuations (Stock In, Stock Out, 
+ * Wastage, Adjustments) for a target ingredient line item.
+ */
+export async function getInventoryHistoryService({ 
+    restaurantId, 
+    itemId, 
+    page = 1, 
+    limit = 10 
+}) {
+    const restaurant = await findRestaurantById(restaurantId)
+    if (!restaurant) throw ApiError.notFound("Restaurant not found")
+
+    const inventoryItem  = await findInventoryItemById(itemId)
+    if (!inventoryItem ) throw ApiError.notFound("Inventory item not found")
+    const inventoryRestaurantId = inventoryItem .restaurant?._id?.toString() ?? inventoryItem.restaurant?.toString()
+    if (inventoryRestaurantId !== restaurantId) throw ApiError.notFound("Inventory item not found")
+
+    const rawPage  = typeof page  === "string" ? parseInt(page, 10)  : page
+    const rawLimit = typeof limit === "string" ? parseInt(limit, 10) : limit
+
+    const safePage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
+    const safeLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 10
+    const skip = (safePage - 1) * safeLimit
+
+    const [transactions, totalItems] = await Promise.all([
+        findInventoryTransactions(itemId, { skip, limit: safeLimit }),
+        countInventoryTransactions(itemId)
+    ])
+
+    const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / safeLimit)
+
+    return {
+        inventory: inventoryItem,
+        transactions,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            totalItems,
+            totalPages,
+            hasNextPage: safePage < totalPages,
+            hasPrevPage: safePage > 1
+        }
     }
 }
