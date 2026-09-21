@@ -178,3 +178,46 @@ export const recordInventoryWastageController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * @desc    Get all active low-stock ingredients with pagination tracking maps
+ * @route   GET /api/v1/restaurants/:restaurantId/inventory/low-stock
+ * @access  Private (OWNER, MANAGER)
+ */
+export const getLowStockAlertController = catchAsync(async (req, res) => {
+    const { restaurantId } = req.params
+    const { page = 1, limit = 10 } = req.query
+
+    const result = await InventoryService
+        .getLowStockAlertService({ restaurantId, page, limit })
+
+    return ApiResponse.success(res, {
+        message:  "Low-stock inventory fetched successfully",
+        data: {
+            inventory: result.lowStockItems,
+            meta: result.pagination
+        }
+    })
+})
+
+/**
+ * @desc    Get complete audit ledger movement logs for a specific inventory ingredient item
+ * @route   GET /api/v1/restaurants/:restaurantId/inventory/:itemId/history
+ * @access  Private (OWNER, MANAGER)
+ */
+export const getInventoryHistoryController = catchAsync(async (req, res) => {
+    const { restaurantId, itemId } = req.params
+    const { page = 1, limit = 10 } = req.query
+
+    const result = await InventoryService
+        .getInventoryHistoryService({ restaurantId, itemId, page, limit })
+
+    return ApiResponse.success(res, {
+        message: "Inventory ledger history feed compiled successfully",
+        data: {
+            inventory: result.inventory,
+            transactions: result.transactions,
+            meta: result.pagination
+        }
+    })
+})
