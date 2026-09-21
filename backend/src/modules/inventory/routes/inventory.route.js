@@ -21,6 +21,8 @@ import {
     stockOutInventoryController,
     stockAdjustmentInventoryController,
     recordInventoryWastageController,
+    getLowStockAlertController,
+    getInventoryHistoryController,
 } from "../controllers/inventory.controller.js"
 
 const router = Router()
@@ -53,6 +55,19 @@ router.get(
 )
 
 /**
+ * @route   GET /api/v1/restaurants/:restaurantId/inventory/low-stock
+ * @desc    Fetch a paginated dashboard list of ingredients requiring urgent replenishment
+ * @access  Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/inventory/low-stock",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getLowStockAlertController
+)
+
+/**
  * @route   GET /api/v1/restaurants/:restaurantId/inventory/:itemId
  * @desc    Get a single inventory item by its unique ID
  * @access  Private - OWNER / MANAGER
@@ -79,6 +94,21 @@ router.patch(
     updateInventoryItemController
 )
 
+/* ======================================== History ========================================= */
+/**
+ * @route   GET /api/v1/restaurants/:restaurantId/inventory/:itemId/history
+ * @desc    Fetch an immutable audit trace timeline of all stock movements for an item
+ * @access  Private - OWNER / MANAGER
+ */
+router.get(
+    "/:restaurantId/inventory/:itemId/history",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    getInventoryHistoryController
+)
+
+/* ============================= Action Commands (Ledger Events) ============================= */
 /**
  * @route   POST /api/v1/restaurants/:restaurantId/inventory/:itemId/stock-in
  * @desc    Record an incoming delivery batch influx for a specific inventory ingredient item
