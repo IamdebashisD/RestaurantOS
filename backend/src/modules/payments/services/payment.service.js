@@ -118,14 +118,16 @@ export async function getRestaurantPaymentsService({ restaurantId, page = 1, lim
         findPaymentsByRestaurant({ restaurantId, options: { skip, limit: parsedLimit } }),
         countPaymentsByRestaurant(restaurantId)
     ])
-
+    const totalPages = Math.ceil(totalItems / parsedLimit)
     return {
         payments,
         pagination: {
             page: parsedPage,
             limit: parsedLimit,
             totalItems,
-            totalPages: Math.ceil(totalItems / parsedLimit)
+            totalPages,
+            hasNextPage: parsedPage < totalPages,
+            hasPrevPage: parsedPage > 1
         }
     }
 }
