@@ -10,6 +10,7 @@ export async function createInventoryTransaction(transactionData, session) {
 export async function findInventoryTransactions(inventoryId, options = {}, session) {
     const query = InventoryTransaction
         .find({ inventory: inventoryId })
+        .populate({ path: "performedBy", select: "name email" })
         .sort({ createdAt: -1 })
 
     if (options.skip !== undefined) query.skip(options.skip)
