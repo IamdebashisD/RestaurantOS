@@ -426,7 +426,7 @@ export async function serveOrderService({ restaurantId, orderId }) {
     }
     
     try {
-        return await updateOrderById(orderId, { status: "SERVED" })
+        return await updateOrderById(orderId, { status: "SERVED", servedAt: new Date() })
 
     } catch (error) {
         if (error instanceof ApiError) throw error
@@ -583,5 +583,4 @@ export async function refundOrderPaymentService({ restaurantId, orderId }) {
             error
         )
     }
-
 }
