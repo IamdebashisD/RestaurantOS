@@ -97,6 +97,21 @@ const orderSchema = new mongoose.Schema(
             required: true,
         },
 
+        preparationStartedAt: {
+            type: Date,
+            default: null,
+        },
+
+        readyAt: {
+            type: Date,
+            default: null,
+        },
+
+        servedAt: {
+            type: Date,
+            default: null,
+        },
+
         notes: {
             type: String,
             trim: true,
