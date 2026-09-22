@@ -561,9 +561,9 @@ export async function getInventoryHistoryService({
     const restaurant = await findRestaurantById(restaurantId)
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
 
-    const inventoryItem  = await findInventoryItemById(itemId)
+    const inventoryItem = await findInventoryItemById(itemId)
     if (!inventoryItem ) throw ApiError.notFound("Inventory item not found")
-    const inventoryRestaurantId = inventoryItem .restaurant?._id?.toString() ?? inventoryItem.restaurant?.toString()
+    const inventoryRestaurantId = inventoryItem.restaurant?._id?.toString() ?? inventoryItem.restaurant?.toString()
     if (inventoryRestaurantId !== restaurantId) throw ApiError.notFound("Inventory item not found")
 
     const rawPage  = typeof page  === "string" ? parseInt(page, 10)  : page
