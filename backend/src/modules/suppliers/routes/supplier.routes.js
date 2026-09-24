@@ -6,10 +6,12 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 
 import validate from "../../../middlewares/validate.middleware.js"
 import { createSupplierDto } from "../dto/create-supplier.dto.js"
+import { updateSupplierDto } from "../dto/update-supplier.dto.js"
 import {
     createSupplierController,
     getRestaurantSuppliersController,
     getSupplierByIdController,
+    updateSupplierController,
 } from "../controllers/supplier.controller.js"
 
 
@@ -54,6 +56,21 @@ router.get(
     requiredRole("OWNER", "MANAGER"),
     getSupplierByIdController
 )
+
+/**
+ * @route   PATCH /api/v1/restaurants/:restaurantId/suppliers/:supplierId
+ * @desc    Update an existing supplier belonging to a restaurant
+ * @access  Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/suppliers/:supplierId",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(updateSupplierDto),
+    updateSupplierController
+)
+
 
 
 export default router
