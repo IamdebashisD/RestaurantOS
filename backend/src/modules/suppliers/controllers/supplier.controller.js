@@ -80,3 +80,28 @@ export const getSupplierByIdController = catchAsync(
         })
     }
 )
+
+/**
+ * Express controller to handle HTTP requests for updating supplier details
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+export const updateSupplierController = catchAsync(
+    async (req, res) => {
+        const { restaurantId, supplierId } = req.params
+
+        const supplier = await SupplierService.updateSupplierService({
+            restaurantId,
+            supplierId,
+            updateData: req.body
+        })
+
+        return ApiResponse.success(res, {
+            message: "Supplier updated successfully",
+            data: {
+                supplier
+            }
+        })
+    }
+)
