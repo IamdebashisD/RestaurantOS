@@ -15,12 +15,12 @@ export async function findPurchaseOrderById(purchaseOrderId, session) {
 }
 // 3. Find a purchase order by its business number
 export async function findPurchaseOrderByNumber(
-    restauramtId, 
+    restaurantId, 
     purchaseOrderNumber, 
     session
 ) {
     const query = PurchaseOrder.findOne({
-        restaurant: restauramtId,
+        restaurant: restaurantId,
         purchaseOrderNumber
     })
 
