@@ -14,6 +14,7 @@ import paymentRouter from "./payments/routes/payment.routes.js"
 import inventoryRouter from "./inventory/routes/inventory.route.js"
 import kitchenRouter from "./kitchen/routes/kitchen.route.js"
 import supplierRouter from "./suppliers/routes/supplier.routes.js"
+import purchaseOrderRouter from "./purchasing/routes/purchase-order.routes.js"
 
 const rootRouter = Router()
 
@@ -31,6 +32,7 @@ rootRouter.use("/restaurants", paymentRouter)
 rootRouter.use("/restaurants", inventoryRouter)
 rootRouter.use("/restaurants", kitchenRouter)
 rootRouter.use("/restaurants", supplierRouter)
+rootRouter.use("/restaurants", purchaseOrderRouter)
 
 
 export default rootRouter
