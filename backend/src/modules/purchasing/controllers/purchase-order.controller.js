@@ -97,3 +97,26 @@ export const updatePurchaseOrderController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * Express controller to handle HTTP requests for ordering a purchase order
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+export const orderPurchaseOrderController = catchAsync(async (req, res) => {
+    const { restaurantId, purchaseOrderId } = req.params
+
+    const purchaseOrder =
+        await PurchaseOrderService.orderPurchaseOrderService({
+            restaurantId,
+            purchaseOrderId
+        })
+
+    return ApiResponse.success(res, {
+        message: "Purchase order confirmed and placed successfully",
+        data: {
+            purchaseOrder
+        }
+    })
+})
