@@ -84,3 +84,16 @@ export async function updatePurchaseOrderById(purchaseOrderId, updateData, sessi
     if (session) query.session(session)
     return query.exec()
 }
+
+// 7. Atomically transitions a purchase order status from DRAFT to ORDERED
+export async function transitionDraftToOrdered(purchaseOrderId, restaurantId, updateData) {
+    return PurchaseOrder.findOneAndUpdate(
+        {
+            _id: purchaseOrderId,
+            restaurant: restaurantId,
+            status: "DRAFT" // ⚡ The guard: The update fails instantly if the database state is no longer DRAFT
+        },
+        { $set: updateData },
+        { returnDocument: "after", runValidators: true }
+    ).exec()
+}
