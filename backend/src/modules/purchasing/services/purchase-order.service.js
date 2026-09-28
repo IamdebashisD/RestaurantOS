@@ -12,6 +12,7 @@ import {
     countPurchaseOrdersByRestaurant,
     findPurchaseOrderById,
     updatePurchaseOrderById,
+    transitionDraftToOrdered,
 } from "../repositories/purchase-order.repository.js"
 
 
@@ -365,4 +366,41 @@ export async function updatePurchaseOrderService({ restaurantId, purchaseOrderId
     } finally {
         await session.endSession()
     }
+}
+
+/**
+ * 4. Order / Confirm Purchase Order
+ * Transitions a purchase order status from DRAFT to ORDERED
+ * @param {Object} params
+ * @param {string} params.restaurantId
+ * @param {string} params.purchaseOrderId
+ * @returns {Promise<Object>} The ordered purchase order document
+ */
+export async function orderPurchaseOrderService({ restaurantId, purchaseOrderId }) {
+    const purchaseOrder = await findPurchaseOrderById(purchaseOrderId)
+    if (!purchaseOrder) throw ApiError.notFound("Purchase order not found")
+    
+    const orderRestaurantId = purchaseOrder.restaurant?._id?.toString() ?? purchaseOrder.restaurant?.toString()
+    if (orderRestaurantId !== restaurantId) throw ApiError.notFound("Purchase order not found")
+
+    if (purchaseOrder.status !== "DRAFT") {
+        throw ApiError.conflict(
+            `Purchase order cannot be ordered when its current status is "${purchaseOrder.status}"`
+        )
+    }
+    if (!purchaseOrder.items || purchaseOrder.items.length === 0) {
+        throw ApiError.badRequest("Cannot place an empty purchase order")
+    }
+    // Dynamic payload properties for the state advancement lifecycle step
+    const updateData = {
+        status: "ORDERED",
+        orderedAt: new Date()
+    }
+    const updatedPurchaseOrder = await transitionDraftToOrdered(purchaseOrderId, restaurantId, updateData)
+    if (!updatedPurchaseOrder) {
+        throw ApiError.conflict(
+            "Purchase order could not be placed because its state changed.Please refresh and try again."
+        )
+    }
+    return updatedPurchaseOrder
 }
