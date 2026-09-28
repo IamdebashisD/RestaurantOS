@@ -13,6 +13,7 @@ import {
     getRestaurantPurchaseOrdersController,
     getPurchaseOrderByIdController,
     updatePurchaseOrderController,
+    orderPurchaseOrderController,
 } from "../controllers/purchase-order.controller.js"
 
 
@@ -73,6 +74,20 @@ router.patch(
     validate(updatePurchaseOrderDto),
     updatePurchaseOrderController
 )
+
+/**
+ * @route   PATCH /api/v1/restaurants/:restaurantId/purchase-orders/:purchaseOrderId/order
+ * @desc    Confirm a draft purchase order and mark it as ordered
+ * @access  Private - OWNER / MANAGER
+ */
+router.patch(
+    "/:restaurantId/purchase-orders/:purchaseOrderId/order",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    orderPurchaseOrderController
+)
+
 
 
 export default router
