@@ -7,6 +7,7 @@ import { requiredRole } from "../../../middlewares/role.middleware.js"
 import validate from "../../../middlewares/validate.middleware.js"
 import { createPurchaseOrderDto } from "../dto/create-purchase-order.dto.js"
 import { updatePurchaseOrderDto } from "../dto/update-purchase-order.dto.js"
+import { receivePurchaseOrderDto } from "../dto/receive-purchase-order.dto.js"
 
 import {
     createPurchaseOrderController,
@@ -14,6 +15,7 @@ import {
     getPurchaseOrderByIdController,
     updatePurchaseOrderController,
     orderPurchaseOrderController,
+    receivePurchaseOrderController,
 } from "../controllers/purchase-order.controller.js"
 
 
@@ -88,6 +90,19 @@ router.patch(
     orderPurchaseOrderController
 )
 
+/** 
+ * @route   POST /api/v1/restaurants/:restaurantId/purchase-orders/:purchaseOrderId/receive 
+ * @desc    Receive stock against an ordered purchase order and update inventory 
+ * @access  Private - OWNER / MANAGER 
+ */
+router.patch(
+    "/:restaurantId/purchase-orders/:purchaseOrderId/receive",
+    authenticate,
+    requireRestaurantAccess,
+    requiredRole("OWNER", "MANAGER"),
+    validate(receivePurchaseOrderDto),
+    receivePurchaseOrderController
+)
 
 
 export default router
