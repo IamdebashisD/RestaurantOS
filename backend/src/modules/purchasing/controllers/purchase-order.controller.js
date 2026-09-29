@@ -120,3 +120,30 @@ export const orderPurchaseOrderController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * Express controller to handle HTTP requests for receiving stock items against an order
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+export const receivePurchaseOrderController = catchAsync(async (req, res) => {
+    const { restaurantId, purchaseOrderId } = req.params
+    const { items } = req.body
+    const performedBy = req.user?._id?.toString() ?? req.user?.id
+
+    const purchaseOrder = await PurchaseOrderService
+        .receivePurchaseOrderService({
+            restaurantId, 
+            purchaseOrderId, 
+            items, 
+            performedBy
+        })
+    
+    return ApiResponse.success(res, {
+        message: "Stock counts received and inventory updated successfully",
+        data: {
+            purchaseOrder
+        }
+    })
+})
