@@ -3,7 +3,8 @@ import ApiError from "../../../utils/api-error.js"
 
 import { findRestaurantById } from "../../restaurants/repositories/restaurant.repository.js"
 import { findSupplierById } from "../../suppliers/repositories/supplier.repository.js"
-import { findInventoryItemById } from "../../inventory/repositories/inventory.repository.js"
+import { findInventoryItemById, updateInventoryItemById } from "../../inventory/repositories/inventory.repository.js"
+import { createInventoryTransaction } from "../../inventory/repositories/inventory-transaction.repository.js" 
 
 import {
     createPurchaseOrder,
@@ -399,8 +400,186 @@ export async function orderPurchaseOrderService({ restaurantId, purchaseOrderId 
     const updatedPurchaseOrder = await transitionDraftToOrdered(purchaseOrderId, restaurantId, updateData)
     if (!updatedPurchaseOrder) {
         throw ApiError.conflict(
-            "Purchase order could not be placed because its state changed.Please refresh and try again."
+            "Purchase order could not be placed because its state changed. Please refresh and try again."
         )
     }
     return updatedPurchaseOrder
+}
+
+/**
+ * 5. Receive Purchase Order
+ *
+ * Receives stock against an ORDERED or PARTIALLY_RECEIVED
+ * purchase order and atomically updates:
+ *
+ * 1. Purchase order received quantities/status
+ * 2. Inventory current quantities
+ * 3. Inventory transaction ledger
+ *
+ * @param {Object} params
+ * @param {string} params.restaurantId
+ * @param {string} params.purchaseOrderId
+ * @param {Array<Object>} params.items
+ * @returns {Promise<Object>} Updated purchase order
+ */
+export async function receivePurchaseOrderService({ 
+    restaurantId, 
+    purchaseOrderId, 
+    items,
+    performedBy 
+}) {
+    const purchaseOrder = await findPurchaseOrderById(purchaseOrderId)
+    if (!purchaseOrder) throw ApiError.notFound("Purchase order not found")
+    
+    const orderRestaurantId =
+        purchaseOrder.restaurant?._id?.toString() ??
+        purchaseOrder.restaurant?.toString()
+    if (orderRestaurantId !== restaurantId) throw ApiError.notFound("Purchase order not found")
+    
+    /*
+     * Stock can only be received after the PO
+     * has been formally ordered.
+     */
+    if (purchaseOrder.status !== "ORDERED" && purchaseOrder.status !== "PARTIALLY_RECEIVED") {
+        throw ApiError.conflict(
+            `Cannot receive purchase order when its current status is "${purchaseOrder.status}"`
+        )
+    }
+
+    const session = await mongoose.startSession()
+
+    try {
+        let updatedPurchaseOrder
+
+        await session.withTransaction(async () => {
+            /*
+             * Re-read the PO inside the transaction.
+             *
+             * This protects against another request modifying
+             * the PO between the initial validation and this
+             * receiving operation.
+             */
+            const currentPurchaseOrder = await findPurchaseOrderById(purchaseOrderId, session)
+            if (!currentPurchaseOrder) throw ApiError.notFound("Purchase order not found")
+            if (currentPurchaseOrder.status !== "ORDERED" && 
+                currentPurchaseOrder.status !== "PARTIALLY_RECEIVED"
+            ) {
+                throw ApiError.conflict(
+                    `Cannot receive purchase order when its current status is "${currentPurchaseOrder.status}"`
+                )
+            }
+
+            /*
+             * Prevent receiving the same inventory item
+             * more than once in the same request.
+             */
+            const inventoryIDs = items.map((item) => item.inventoryId)
+            const uniqueInventoryIds = new Set(inventoryIDs)
+
+            if (uniqueInventoryIds.size !== inventoryIDs.length) {
+                throw ApiError.badRequest(
+                    "Duplicate inventory items are not allowed in a single receiving operation"
+                )
+            }
+
+            /*
+             * Process every received item.
+             */
+            for (const receivedItem of items) {
+                const purchaseOrderItem = currentPurchaseOrder.items.find(
+                    (item) => item.inventory.toString() === receivedItem.inventoryId
+                )
+
+                if (!purchaseOrderItem) {
+                    throw ApiError.badRequest(
+                        `Inventory item ${receivedItem.inventoryId} does not belong to this purchase order`
+                    )
+                }
+                /*
+                 * How much of this item has already been received?
+                 * And how much was originally ordered
+                 */
+                const alreadyReceived = purchaseOrderItem.receivedQuantity || 0
+                const orderedQuantity = purchaseOrderItem.quantity
+                const remainingQuantity = orderedQuantity - alreadyReceived
+
+                if (receivedItem.receivedQuantity > remainingQuantity) {
+                    throw ApiError.badRequest(
+                        `Cannot receive ${receivedItem.receivedQuantity} ${purchaseOrderItem.unit} of "${purchaseOrderItem.name}". Only ${remainingQuantity} ${purchaseOrderItem.unit} remains on the purchase order.`
+                    )
+                } 
+
+                // Get the inventory document using the transaction session.
+                const inventoryItem = await findInventoryItemById(receivedItem.inventoryId, session)
+                if (!inventoryItem) throw ApiError.notFound(`Inventory item ${receivedItem.inventoryId} not found`)
+                const inventoryRestaurantId =
+                    inventoryItem.restaurant?._id?.toString() ??
+                    inventoryItem.restaurant?.toString()
+
+                if (inventoryRestaurantId !== restaurantId) 
+                    throw ApiError.notFound("Inventory item not found")
+                if (inventoryItem.status !== "ACTIVE") 
+                    throw ApiError.conflict(`Inventory item "${inventoryItem.name}" is inactive`)
+
+                // Inventory ledger calculation. || Compute floating-point safe mathematical sums
+                const previousQuantity = inventoryItem.currentQuantity || 0
+                const rawResultingQuantity = previousQuantity + receivedItem.receivedQuantity
+                const resultingQuantity = Math.round(rawResultingQuantity * 100) / 100
+
+                // Update inventory || Commit balanced ledger counts down to inventory collections
+                await updateInventoryItemById(
+                    receivedItem.inventoryId,
+                    { currentQuantity: resultingQuantity },
+                    session
+                )
+
+                /*
+                 * Create immutable inventory ledger entry.
+                 *
+                 * We use the cost stored on the PO,
+                 * because that represents the agreed
+                 * purchase cost for this stock.
+                 */
+                await createInventoryTransaction(
+                    {
+                        restaurant: restaurantId,
+                        inventory: receivedItem.inventoryId,
+                        type: "STOCK_IN",
+                        quantity: receivedItem.receivedQuantity,
+                        previousQuantity,
+                        resultingQuantity,
+                        costPerUnit: purchaseOrderItem.costPerUnit,
+                        reason: `Stock received against purchase order ${currentPurchaseOrder.purchaseOrderNumber}`,
+                        performedBy
+                    },
+                    session
+                )
+
+                // Update the PO item's cumulative received quantity
+                purchaseOrderItem.receivedQuantity = alreadyReceived + receivedItem.receivedQuantity
+            }
+            // Determine resulting purchase order terminal state transition targets
+            const allItemsReceived = currentPurchaseOrder.items.every(
+                (item) => item.receivedQuantity >= item.quantity
+            )
+            const newStatus = allItemsReceived ? "RECEIVED" : "PARTIALLY_RECEIVED"
+
+            const updateData = {
+                items: currentPurchaseOrder.items,
+                status: newStatus
+            }
+            if (newStatus === "RECEIVED") updateData.receivedAt = new Date()
+            
+            const result = await updatePurchaseOrderById(purchaseOrderId, updateData, session)
+            updatedPurchaseOrder = Array.isArray(result) ? result[0] : result
+            if (!updatedPurchaseOrder) throw ApiError.notFound("Purchase order not found")
+        })
+
+        return updatedPurchaseOrder
+    } catch (error) {
+        if (error instanceof ApiError) throw error
+        throw ApiError.internal("Failed to receive purchase order due to a database error", error)
+    } finally {
+        await session.endSession()
+    }
 }
