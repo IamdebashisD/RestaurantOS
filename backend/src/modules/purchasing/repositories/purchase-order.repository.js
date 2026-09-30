@@ -97,3 +97,16 @@ export async function transitionDraftToOrdered(purchaseOrderId, restaurantId, up
         { returnDocument: "after", runValidators: true }
     ).exec()
 }
+
+// 8. Atomically transitions a purchase order to CANCELLED
+export async function transitionToCancelled(purchaseOrderId, restaurantId, updateData) {
+    return PurchaseOrder.findByIdAndUpdate(
+        {
+            _id: purchaseOrderId,
+            restaurant: restaurantId,
+            status: { $in: ['DRAFT', 'ORDERED'] } // 🛡️ Safety Guard: Blocks cancellations if stock has arrived
+        },
+        { $set: updateData },
+        { returnDocument: "after", runValidators: true }
+    ).exec()
+}
