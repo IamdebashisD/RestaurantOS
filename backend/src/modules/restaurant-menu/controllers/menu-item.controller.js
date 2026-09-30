@@ -37,13 +37,22 @@ export const createMenuItemController = catchAsync(async (req, res) => {
 // Controller - 2. Get All Menu Items
 export const getRestaurantMenuItemsController = catchAsync(async (req, res) => {
     const { restaurantId } = req.params
+    const { page, limit, category, isAvailable, search } = req.query
 
-    const menuItems = await MenuItemService.getRestaurantMenuItemsService(restaurantId)
+    const result = await MenuItemService.getRestaurantMenuItemsService({
+        restaurantId,
+        page,
+        limit,
+        category,
+        isAvailable,
+        search
+    })
 
     return ApiResponse.success(res, {
         message: "Restaurant menu items retrieved successfully",
         data: {
-            menuItems
+            menuItems: result.menuItems,
+            meta: result.pagination
         }
     })
 })

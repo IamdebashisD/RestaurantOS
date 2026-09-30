@@ -11,6 +11,7 @@ import {
     findMenuItemsByRestaurant,
     findMenuItemById,
     updateMenuItemById,
+    countMenuItemsByRestaurant
 } from "../repositories/menu-item.repository.js"
 
 import {
@@ -70,13 +71,69 @@ export async function createMenuItemService({
 }
 
 // 2. Get All Menu Items
-export async function getRestaurantMenuItemsService(restaurantId) {
+/**
+ * Retrieves a filtered, paginated list of menu items for a specific restaurant
+ * @param {Object} params
+ * @param {string} params.restaurantId
+ * @param {number|string} [params.page]
+ * @param {number|string} [params.limit]
+ * @param {string} [params.category]
+ * @param {string} [params.isAvailable]
+ * @param {string} [params.search]
+ * @returns {Promise<Object>} The menu items list and structural pagination metadata
+ */
+export async function getRestaurantMenuItemsService({ 
+    restaurantId,
+    page = 1,
+    limit = 10,
+    category,
+    isAvailable,
+    search
+
+}) {
     const restaurant = await findRestaurantById(restaurantId)
     if (!restaurant) throw ApiError.notFound("Restaurant not found")
 
-    const menuItems = await findMenuItemsByRestaurant(restaurantId)
+    const filters = {
+        category,
+        search: typeof search === "string" ? search.trim() : ""
+    }
+
+    if (isAvailable === "true"  || isAvailable === true)  filters.isAvailable = true
+    if (isAvailable === "false" || isAvailable === false) filters.isAvailable = false
+
+    if (page === undefined && limit === undefined) {
+        const menuItems = await findMenuItemsByRestaurant(restaurantId, filters)
+        return { menuItems, pagination: null }
+    }
+
+    const rawPage  = typeof page  === "string" ? parseInt(page, 10)  : page
+    const rawLimit = typeof limit === "string" ? parseInt(limit, 10) : limit
+    const safePage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
+    const safeLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 10
+    const skip = (safePage - 1) * safeLimit 
+
+    const options = { skip, limit: safeLimit }
+
+    const [menuItems, totalItems] = await Promise.all([
+        findMenuItemsByRestaurant(restaurantId, filters, options),
+        countMenuItemsByRestaurant(restaurantId, filters)
+    ])
+    const totalPages = totalItems === 0 
+        ? 0 
+        : Math.ceil(totalItems / safeLimit)
     
-    return menuItems
+    return {
+        menuItems,
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            totalItems,
+            totalPages,
+            hasNextPage: safePage < totalPages,
+            hasPrevPage: safePage > 1
+        }
+    }
 }
 
 // 3. Get a single menu item
