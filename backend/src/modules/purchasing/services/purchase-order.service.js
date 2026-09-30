@@ -14,6 +14,7 @@ import {
     findPurchaseOrderById,
     updatePurchaseOrderById,
     transitionDraftToOrdered,
+    transitionToCancelled,
 } from "../repositories/purchase-order.repository.js"
 
 
@@ -582,4 +583,55 @@ export async function receivePurchaseOrderService({
     } finally {
         await session.endSession()
     }
+}
+
+
+/**
+ * State machine lookup defining exact transition matrix constraints for canceling an order.
+ * Isolates invariant evaluation rules out of operational service pathways.
+ * @type {Record<string, { allowed: boolean, reason?: string, errorType?: "conflict" | "badRequest" }>}
+ */
+const CANCEL_ORDER_TRANSITION = {
+    DRAFT:              { allowed: true },
+    ORDERED:            { allowed: true },
+    PARTIALLY_RECEIVED: { allowed: false, reason: "Cannot cancel a purchase order that has already received stock", errorType: "conflict"},
+    RECEIVED:           { allowed: false, reason: "Cannot cancel a purchase order that has already received stock", errorType: "conflict"},
+    CANCELLED:          { allowed: false, reason: "Purchase order is already cancelled", errorType: "badRequest"},
+}
+/**
+ * Cancels an open or draft purchase order
+ * @param {Object} params
+ * @param {string} params.restaurantId
+ * @param {string} params.purchaseOrderId
+ * @returns {Promise<Object>} The cancelled purchase order document
+ */
+export async function cancelPurchaseOrderService({ restaurantId, purchaseOrderId }) {
+    const purchaseOrder = await findPurchaseOrderById(purchaseOrderId)
+    if (!purchaseOrder) throw ApiError.notFound("Purchase order not found")
+    
+    const orderRestaurantId = purchaseOrder.restaurant?._id?.toString() ?? purchaseOrder.restaurant?.toString()
+    if (orderRestaurantId !== restaurantId) throw ApiError.notFound("Purchase order not found")
+
+    // Evaluate state matrix transformation constraints
+    const stateRule = CANCEL_ORDER_TRANSITION[purchaseOrder.status]
+    if (!stateRule) {
+        throw ApiError.badRequest(
+            `Unknown purchase order status workflow state: "${purchaseOrder.status}"`
+        )  
+    }
+    // Fire dynamic exception classes depending on specific configuration definitions
+    if (!stateRule.allowed) {
+        throw ApiError[stateRule.errorType](stateRule.reason)
+    }
+
+    const updateData = {
+        status: "CANCELLED"
+    }
+    const updatePurchaseOrder = await transitionToCancelled(purchaseOrderId, restaurantId, updateData)
+    if (!updatePurchaseOrder) {
+        throw ApiError.conflict(
+            "Failed to cancel purchase order. The status was modified by another process."
+        )
+    }
+    return updatePurchaseOrder
 }
