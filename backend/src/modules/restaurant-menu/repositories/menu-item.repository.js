@@ -48,7 +48,7 @@ export async function findMenuItemsByRestaurant(restaurantId, filters = {}, opti
 export async function updateMenuItemById(itemId, updateData, session) {
     const query = MenuItem.findByIdAndUpdate(itemId, { $set: updateData }, { returnDocument: "after", runValidators: true })
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 /**
@@ -67,6 +67,6 @@ export async function countMenuItemsByRestaurant(restaurantId, filters = {}, ses
 
     const mongooseQuery = MenuItem.countDocuments(query)
     if (session) mongooseQuery.session(session)
-        
+
     return mongooseQuery.exec()
 }
