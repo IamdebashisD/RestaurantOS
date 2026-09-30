@@ -147,3 +147,26 @@ export const receivePurchaseOrderController = catchAsync(async (req, res) => {
         }
     })
 })
+
+/**
+ * Express controller to handle HTTP requests for cancelling a purchase order
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+export const cancelPurchaseOrderController = catchAsync(async (req, res) => {
+    const { restaurantId, purchaseOrderId } = req.params
+
+    const purchaseOrder = await PurchaseOrderService
+        .cancelPurchaseOrderService({
+            restaurantId,
+            purchaseOrderId
+        })
+
+    return ApiResponse.success(res, {
+        message: "Purchase order cancelled successfully",
+        data: {
+            purchaseOrder
+        }
+    })
+})
