@@ -5,7 +5,7 @@ import { PurchaseOrder } from "../models/purchase-order.model.js"
 export async function createPurchaseOrder(purchaseOrderData, session) {
     return PurchaseOrder
         .create([purchaseOrderData], { session })
-        .then(([purchaseOrder]) =>  purchaseOrder)
+        .then(([purchaseOrder]) => purchaseOrder)
 }
 // 2. Find a purchase order by ID
 export async function findPurchaseOrderById(purchaseOrderId, session) {
