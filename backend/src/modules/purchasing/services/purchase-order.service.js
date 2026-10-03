@@ -17,6 +17,8 @@ import {
     transitionToCancelled,
 } from "../repositories/purchase-order.repository.js"
 
+import { createNotificationService } from "../../notifications/services/notification.service.js"
+
 
 /**
  * Helper function for - generatePurchaseOrderNumber
@@ -574,6 +576,20 @@ export async function receivePurchaseOrderService({
             const result = await updatePurchaseOrderById(purchaseOrderId, updateData, session)
             updatedPurchaseOrder = Array.isArray(result) ? result[0] : result
             if (!updatedPurchaseOrder) throw ApiError.notFound("Purchase order not found")
+            
+            // Trigger Notification INSIDE the transaction context!
+            await createNotificationService({
+                restaurantId,
+                recipientId: performedBy,
+                type: updatedPurchaseOrder.status === "RECEIVED" 
+                                                        ? "PURCHASE_ORDER_RECEIVED" 
+                                                        : "ORDER_STATUS_CHANGED",
+                title: updatedPurchaseOrder.status === "RECEIVED" 
+                                                        ? "Shipment Fully Received" 
+                                                        : "Shipment Partially Received",
+                message: `Stock items for ${updatedPurchaseOrder.purchaseOrderNumber} have been logged into inventory counts.`,
+                data: { purchaseOrderId: updatedPurchaseOrder._id}
+            }, session)
         })
 
         return updatedPurchaseOrder
