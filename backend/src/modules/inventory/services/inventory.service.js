@@ -19,6 +19,9 @@ import {
     countInventoryTransactions,
 } from "../repositories/inventory-transaction.repository.js"
 
+import { createNotificationService } from "../../notifications/services/notification.service.js"
+
+
 
 /**
  * 1. Create New Inventory Item
@@ -273,8 +276,8 @@ export async function stockInInventoryService({
 /**
  * 6. Stock Out
  *
- * Removes stock from an inventory item and records the movement
- * as an inventory transaction.
+ * Removes stock from an inventory item and records the movement as an inventory transaction.
+ * Triggers an automated notification if the stock level hits or drops below the required minimum.
  *
  * The operation is atomic:
  * - Inventory quantity is reduced.
@@ -340,6 +343,19 @@ export async function stockOutInventoryService({
                 },
                 session
             )
+
+            // AUTOMATED TRIGGER: Evaluate stock status boundaries inside the transaction block
+            const threshold = item.minimumQuantity ?? updatedInventory.minimumQuantity ?? 0
+            if (resultingQuantity <= threshold) {
+                 await createNotificationService({
+                    restaurantId,
+                    recipientId: performedBy, // Or target specific stock inventory control managers
+                    type: "LOW_STOCK",
+                    title: "Low Stock Alert ⚠️",
+                    message: `Inventory item "${item.name}" has dropped to ${resultingQuantity} ${item.unit}. Minimum required is ${threshold} ${item.unit}.`,
+                    data: { inventoryId: item._id }
+                }, session)
+            }
         })
 
         return updatedInventory
