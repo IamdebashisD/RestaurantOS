@@ -15,7 +15,8 @@ import inventoryRouter from "./inventory/routes/inventory.route.js"
 import kitchenRouter from "./kitchen/routes/kitchen.route.js"
 import supplierRouter from "./suppliers/routes/supplier.routes.js"
 import purchaseOrderRouter from "./purchasing/routes/purchase-order.routes.js"
-import NotificationRouter from "./notifications/routes/notification.routes.js"
+import notificationRouter from "./notifications/routes/notification.routes.js"
+import reportRouter from "./reports/routes/report.routes.js" 
 
 const rootRouter = Router()
 
@@ -34,7 +35,8 @@ rootRouter.use("/restaurants", inventoryRouter)
 rootRouter.use("/restaurants", kitchenRouter)
 rootRouter.use("/restaurants", supplierRouter)
 rootRouter.use("/restaurants", purchaseOrderRouter)
-rootRouter.use("/restaurants", NotificationRouter)
+rootRouter.use("/restaurants", notificationRouter)
+rootRouter.use("/restaurants", reportRouter)
 
 
 export default rootRouter
