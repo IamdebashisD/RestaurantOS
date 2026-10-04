@@ -106,11 +106,13 @@ export const updatePurchaseOrderController = catchAsync(async (req, res) => {
  */
 export const orderPurchaseOrderController = catchAsync(async (req, res) => {
     const { restaurantId, purchaseOrderId } = req.params
+    const performedBy = req.user.id
 
     const purchaseOrder =
         await PurchaseOrderService.orderPurchaseOrderService({
             restaurantId,
-            purchaseOrderId
+            purchaseOrderId,
+            performedBy
         })
 
     return ApiResponse.success(res, {
@@ -156,11 +158,13 @@ export const receivePurchaseOrderController = catchAsync(async (req, res) => {
  */
 export const cancelPurchaseOrderController = catchAsync(async (req, res) => {
     const { restaurantId, purchaseOrderId } = req.params
+    const performedBy = req.user.id
 
     const purchaseOrder = await PurchaseOrderService
         .cancelPurchaseOrderService({
             restaurantId,
-            purchaseOrderId
+            purchaseOrderId,
+            performedBy
         })
 
     return ApiResponse.success(res, {

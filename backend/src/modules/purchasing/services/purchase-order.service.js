@@ -380,7 +380,7 @@ export async function updatePurchaseOrderService({ restaurantId, purchaseOrderId
  * @param {string} params.purchaseOrderId
  * @returns {Promise<Object>} The ordered purchase order document
  */
-export async function orderPurchaseOrderService({ restaurantId, purchaseOrderId }) {
+export async function orderPurchaseOrderService({ restaurantId, purchaseOrderId, performedBy }) {
     const purchaseOrder = await findPurchaseOrderById(purchaseOrderId)
     if (!purchaseOrder) throw ApiError.notFound("Purchase order not found")
     
@@ -406,6 +406,17 @@ export async function orderPurchaseOrderService({ restaurantId, purchaseOrderId 
             "Purchase order could not be placed because its state changed. Please refresh and try again."
         )
     }
+
+    // Trigger Notification instantly upon a successful business state transformation!
+    await createNotificationService({
+        restaurantId,
+        recipientId: performedBy,
+        type: "PURCHASE_ORDER_ORDERED",
+        title: "Purchase Order Confirmed",
+        message: `Purchase Order ${updatedPurchaseOrder.purchaseOrderNumber} has been officially ordered.`,
+        data: { purchaseOrderId: updatedPurchaseOrder._id }
+    })
+
     return updatedPurchaseOrder
 }
 
@@ -621,7 +632,7 @@ const CANCEL_ORDER_TRANSITION = {
  * @param {string} params.purchaseOrderId
  * @returns {Promise<Object>} The cancelled purchase order document
  */
-export async function cancelPurchaseOrderService({ restaurantId, purchaseOrderId }) {
+export async function cancelPurchaseOrderService({ restaurantId, purchaseOrderId, performedBy }) {
     const purchaseOrder = await findPurchaseOrderById(purchaseOrderId)
     if (!purchaseOrder) throw ApiError.notFound("Purchase order not found")
     
@@ -649,5 +660,16 @@ export async function cancelPurchaseOrderService({ restaurantId, purchaseOrderId
             "Failed to cancel purchase order. The status was modified by another process."
         )
     }
+
+    // Trigger Notification instantly right here after successful database mutation!
+    await createNotificationService({
+        restaurantId,
+        recipientId: performedBy,
+        type: "PURCHASE_ORDER_CANCELLED",
+        title: "Purchase Order Cancelled",
+        message: `Purchase Order ${updatePurchaseOrder.purchaseOrderNumber} has been officially cancelled.`,
+        data: { purchaseOrderId: updatePurchaseOrder._id }        
+    })
+
     return updatePurchaseOrder
 }
