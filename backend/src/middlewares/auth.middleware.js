@@ -1,4 +1,4 @@
-import { verifyToken } from "../utils/token.js"
+import { verifyAccessToken } from "../utils/token.js"
 import ApiError from "../utils/api-error.js"
 import { findUserById } from "../modules/users/repositories/user.repositories.js"
 
@@ -26,7 +26,7 @@ export async function authenticate(req, res, next) {
         
         let payload
         try {
-            payload = verifyToken(token)
+            payload = verifyAccessToken(token)
         } catch (error) {
             if (error.name === "TokenExpiredError") throw ApiError.unauthorized("Authentication token has expired")
             if (error.name === "JsonWebTokenError") throw ApiError.unauthorized("Invalid authentication token")
