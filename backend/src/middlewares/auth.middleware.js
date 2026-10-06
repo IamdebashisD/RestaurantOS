@@ -5,15 +5,24 @@ import { findUserById } from "../modules/users/repositories/user.repositories.js
 
 export async function authenticate(req, res, next) {
     try {
-        const authorization = req.headers.authorization
+        let token = null
 
-        if (!authorization) throw ApiError.unauthorized("Authentication required")
-        
-        const [scheme, token] = authorization.split(" ")
-
-        if (scheme !== "Bearer" || !token) {
-            throw ApiError.unauthorized("Invalid authorization scheme")
+        if (req.cookies && req.cookies.accessToken) {
+            token = req.cookies.accessToken
         }
+
+        const authorization = req.headers.authorization
+        if (!token && authorization) {
+            const [scheme, headerToken] = authorization.split(" ")
+
+            if (scheme === "Bearer" && headerToken) {
+                token = headerToken
+            } else {
+                throw ApiError.unauthorized("Invalid authorization scheme layout")
+            }
+        }
+
+        if (!token) throw ApiError.unauthorized("Authentication required. Token missing.")
         
         let payload
         try {
@@ -42,5 +51,4 @@ export async function authenticate(req, res, next) {
     } catch (error) {
         next(error)
     }
-
 }
