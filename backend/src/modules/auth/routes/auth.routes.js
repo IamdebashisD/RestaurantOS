@@ -4,7 +4,9 @@ import {
     signupController, 
     signinController, 
     signoutController,
-    refreshSessionController, 
+    refreshSessionController,
+    verifyEmailController,
+    resendVerificationController,
 } from "../controllers/auth.controller.js"
 
 import { registerDto } from "../dto/register.dto.js"
@@ -50,6 +52,20 @@ router.post("/refresh", refreshSessionController)
  * @access  Private Protected by auth middleware layer
  */
 router.post("/signout", authenticate, signoutController)
+
+/**
+ * @route   GET /api/v1/auth/verify-email
+ * @desc    Process query tokens to activate user profile states
+ * @access  Public
+ */
+router.get("/verify-email", verifyEmailController)
+
+/**
+ * @route   POST /api/v1/auth/resend-verification
+ * @desc    Request a brand new 15-minute token signature link to clear an unverified state
+ * @access  Private 🛡️ (Protected by your authenticate middleware)
+ */
+router.post("/resend-verification", authenticate, resendVerificationController)
 
 
 export default router
