@@ -10,7 +10,7 @@ export function signToken(payload) {
 export function generateAccessToken(payload) {
     return jwt.sign(payload, env.jwtSecret, { algorithm: 'HS256', expiresIn: env.jwtExpiresIn })
 }
-export function verifyToken(token) {
+export function verifyAccessToken(token) {
     return jwt.verify(token, env.jwtSecret)
 }
 
