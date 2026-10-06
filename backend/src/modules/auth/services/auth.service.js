@@ -7,7 +7,14 @@ import {
     findUserByEmailWithPassword,  
 } from '../../users/repositories/user.repositories.js'
 
+import { 
+    generateAccessToken, 
+    generateRefreshToken, 
+    verifyRefreshToken 
+} from '../../../utils/token.js'
+import { findRefreshToken } from "../repositories/refresh-token.repository.js"
 
+// Strips formatting logs out of active user schema structures for client consumption
 function toPublishUser(user) {
     return {
         id: user._id,
@@ -39,8 +46,15 @@ export async function signinService({ email, password }) {
     user.lastLoginAt = new Date()
     await user.save({ validateModifiedOnly: true })
 
-    const token = signToken({ id: user._id })
-    return { user: toPublishUser(user), token }
+    // Token generation
+    const accessToken = generateAccessToken({ id: user._id })
+    const refreshToken = generateRefreshToken({ id: user._id })
+
+    return { 
+        user: toPublishUser(user), 
+        token: accessToken, 
+        refreshToken
+    }
 }
 
 // export async function getProfileService(userId) {
@@ -49,3 +63,39 @@ export async function signinService({ email, password }) {
 
 //     return { user: toPublishUser(user) }
 // }
+
+/**
+ * 🔄 Silent Refresh Service
+ * Evaluates raw refresh token signatures and returns a brand new 1-hour access token path.
+ * 
+ * @param {Object} params
+ * @param {string} params.refreshToken - Outbound long-lived token context signature mapping
+ * @returns {Promise<Object>} Cleaned identity metadata records and fresh access token string keys
+ */
+export async function handleSilentRefreshService({ refreshToken }) {
+    if (!refreshToken) throw ApiError.unauthorized("Refresh token missing")
+    
+    let payload
+    try {
+        payload = verifyRefreshToken(refreshToken)
+    } catch (error) {
+        throw ApiError.unauthorized("Invalid or expired refresh session")
+    }
+
+    // Query the datastore token collection ledger to prevent revoked session use cases
+    const savedTokenDoc = await findRefreshToken(refreshToken)
+    if (!savedTokenDoc || !savedTokenDoc.user) {
+        throw ApiError.unauthorized("Session has been revoked or expired")
+    }
+    if (!savedTokenDoc.user.isActive) {
+        throw ApiError.unauthorized("User account associated with this session is inactive")
+    }
+
+    // Mint a fresh short-lived 1-hour Access Token string signature safely
+    const newAccessToken = generateAccessToken({ id: savedTokenDoc.user._id })
+
+    return {
+        newAccessToken,
+        user: toPublishUser(savedTokenDoc.user)
+    }
+}
