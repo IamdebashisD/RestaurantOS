@@ -109,3 +109,28 @@ export const refreshSessionController = catchAsync(async (req, res) => {
         }
     })
 })
+
+// Express controller to process email verification requests via URL query parameters
+export const verifyEmailController = catchAsync(async (req, res) => {
+    // Smart Extraction: Grabs the token out of the URL query string (req.query)
+    const { token } = req.query
+
+    await authService.verifyEmailService({ token })
+
+    return ApiResponse.success(res, {
+        message: "Email verified successfully! Your account is now fully activated."
+    })
+})
+
+// Express controller to handle user requests for generating a new verification email
+export const resendVerificationController = catchAsync(async (req, res) => {
+    // Safely pull the ID out of the req.user object attached by your authenticate middleware
+    const userId = req.user.id
+
+    await authService.resendVerificationEmailService({ userId })
+
+    return ApiResponse.success(res, {
+        message: 
+            "A fresh email verification link has been successfully dispatched to your inbox. It will expire in 15 minutes."
+    })
+})
