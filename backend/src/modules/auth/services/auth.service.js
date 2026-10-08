@@ -20,6 +20,9 @@ import {
     deleteVerificationTokenByToken,
 } from "../repositories/email-verification.repository.js"
 
+import { sendVerificationEmail } from "../../../utils/email.js" 
+
+
 // Strips formatting logs out of active user schema structures for client consumption
 function toPublishUser(user) {
     return {
@@ -48,12 +51,11 @@ export async function signupService({ name, email, password }) {
         expiresAt 
     })
 
-    // TODO: 📧 PLATFORM LOGISTICS PLUG: Send verification email here
-    // try {
-        
-    // } catch (error) {
-    //     console.error("Email sending failed:", err)
-    // }
+    // 📧 PLATFORM LOGISTICS PLUG: Send verification email here
+    sendVerificationEmail(user.email, verificationToken)
+        .then(() => console.log(`📧 [Nodemailer Success] Verification email background delivery sent to ${user.email}`))
+        .catch((error) => console.error("❌ [Nodemailer Failure] Background mail delivery failed:", error))
+    
 
     console.log(
         `✉️ [Email Verification Generated] Link: 
@@ -178,6 +180,12 @@ export async function resendVerificationEmailService({ userId }) {
         token: freshVerificationToken,
         expiresAt
     })
+
+    await sendVerificationEmail(user.email, freshVerificationToken)
+        .then(() => console.log(`📧 [Nodemailer Success] Fresh email verification background link sent to ${user.email}`))
+        .catch((error) => console.error("❌ [Nodemailer Failure] Background mail delivery failed:", error))
+   
+
     console.log(
         `✉️ [FRESH Email Verification Link Dispatched]: 
         http://localhost:9000/api/v1/auth/verify-email?token=${freshVerificationToken}`
