@@ -65,3 +65,32 @@ export async function sendVerificationEmail(to, token) {
         throw error
     }
 }
+
+
+/**
+ * Sends a HTML/Text password reset instruction email to a user profile inbox
+ * @param {string} to - The recipient's email address
+ * @param {string} token - The secure password reset token string
+ */
+export async function sendPasswordResetEmail(to, token) {
+    const resetUrl = `${env.frontendUrl || "http://localhost:9000"}/api/v1/auth/reset-password?token=${token}`
+
+    const mailOptions = {
+        from: `"RestaurantOS Security" <${env.emailFrom}>`,
+        to,
+        subject: "Reset your RestaurantOS Password 🔒",
+        text: `You requested a password reset. Please copy this link into your browser to complete the process: ${resetUrl}`,
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+                <p>We received a request to reset your password for your RestaurantOS account. Click the button below to choose a new password:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${resetUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Reset Password</a>
+                </div>
+                <p style="color: #666; font-size: 12px;">This link will automatically expire in 10 minutes. If you did not make this request, you can safely ignore this email and your password will remain unchanged.</p>
+            </div>
+        `,
+    }
+
+    return transporter.sendMail(mailOptions)
+}
