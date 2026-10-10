@@ -134,3 +134,28 @@ export const resendVerificationController = catchAsync(async (req, res) => {
             "A fresh email verification link has been successfully dispatched to your inbox. It will expire in 15 minutes."
     })
 })
+
+/**
+ * Express controller to trigger forgot-password request email links
+ */
+export const forgotPasswordController = catchAsync(async (req, res) => {
+    const { email } = req.body
+    await authService.forgotPasswordService({ email })
+    return ApiResponse.success(res, {
+        message: 
+            "If an account matching that email address exists, a secure reset link has been dispatched to your inbox."
+    })
+})
+
+/**
+ * Express controller to commit user password resets using URL query string tokens
+ */
+export const resetPasswordController = catchAsync(async (req, res) => {
+    const { token } = req.query
+    const { newPassword } = req.body
+    await authService.resetPasswordService({ token , newPassword })
+    return ApiResponse.success(res, {
+        message: 
+            "Password reset successfully! You can now log into your account using your new credentials."
+    })
+})

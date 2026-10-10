@@ -7,12 +7,15 @@ import {
     refreshSessionController,
     verifyEmailController,
     resendVerificationController,
+    forgotPasswordController,
+    resetPasswordController,
 } from "../controllers/auth.controller.js"
 
 import { registerDto } from "../dto/register.dto.js"
 import { loginDto } from "../dto/login.dto.js"
 import validate from "../../../middlewares/validate.middleware.js"
 import { authenticate } from "../../../middlewares/auth.middleware.js"
+import { forgotPasswordSchemaDto, resetPasswordSchemaDto } from "../dto/password.dto.js"
 
 
 const router = Router()
@@ -66,6 +69,21 @@ router.get("/verify-email", verifyEmailController)
  * @access  Private 🛡️ (Protected by your authenticate middleware)
  */
 router.post("/resend-verification", authenticate, resendVerificationController)
+
+/**
+ * @route   POST /api/v1/auth/forgot-password
+ * @desc    Submit email parameter to request an account recovery token link
+ * @access  Public
+ */
+router.post("/forgot-password", validate(forgotPasswordSchemaDto), forgotPasswordController)
+
+/**
+ * @route   POST /api/v1/auth/reset-password
+ * @desc    Submit new password string paired with URL query token to overwrite credentials
+ * @access  Public
+ */
+router.post("/reset-password", validate(resetPasswordSchemaDto), resetPasswordController)
+
 
 
 export default router
