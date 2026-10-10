@@ -13,14 +13,15 @@ import {
     generateRefreshToken, 
     verifyRefreshToken 
 } from '../../../utils/token.js'
-import { findRefreshToken } from "../repositories/refresh-token.repository.js"
+import { findRefreshToken, deleteAllRefreshTokensForUser } from "../repositories/refresh-token.repository.js"
 import { 
     saveVerificationToken, 
     findVerificationToken,
     deleteVerificationTokenByToken,
 } from "../repositories/email-verification.repository.js"
 
-import { sendVerificationEmail } from "../../../utils/email.js" 
+import { sendVerificationEmail, sendPasswordResetEmail } from "../../../utils/email.js"
+import { saveResetToken, findResetToken, deleteResetTokenByToken } from "../repositories/password-reset.repository.js"
 
 
 // Strips formatting logs out of active user schema structures for client consumption
@@ -191,3 +192,55 @@ export async function resendVerificationEmailService({ userId }) {
         http://localhost:9000/api/v1/auth/verify-email?token=${freshVerificationToken}`
     )
 }
+
+/**
+ * 🔒 Part 1: Forgot Password Service
+ * Initiates the recovery pipeline loop by generating a temporary 10-minute secure token
+ */
+export async function forgotPasswordService({ email }) {
+    if (!email) throw ApiError.badRequest("Email address is required")
+
+    const user = await findUserByEmail(email)
+    if (!user) return
+
+    const resetToken = crypto.randomBytes(32).toString("hex")
+    const tenMinutesInMs = 1000 * 60 * 10
+    const expiresAt = new Date(Date.now() + tenMinutesInMs)
+
+
+    await saveResetToken({ userId: user._id, token: resetToken, expiresAt })
+
+    // Send Password reset email
+    sendPasswordResetEmail(user.email, resetToken)
+        .then(() => console.log(`📧 [Security Mailer] Password reset link sent to ${user.email}`))
+        .catch((err) => console.error("❌ [Security Mailer Failure]:", err.message))
+
+    console.log(
+        `✉️ [Reset Password Link Dispatched]: 
+        http://localhost:9000/api/v1/auth/reset-password?token=${resetToken}`
+    )
+}
+
+export async function resetPasswordService({ token, newPassword }) {
+    if (!token || !newPassword) throw ApiError.badRequest("Token and new password parameters are required")
+    if (newPassword.length < 8 || newPassword.length > 72) {
+        throw ApiError.badRequest("Password must be at least 8 characters and Password cannot exceed 72 characters")
+    }
+
+    const resetDoc = await findResetToken(token)
+    if (!resetDoc) throw ApiError.notFound("Invalid or expired password reset link")
+    
+    const user = resetDoc.user
+    if (!user) throw ApiError.notFound("User profile associated with this link no longer exists")
+    
+    user.password = newPassword
+    await user.save({ runValidators: true })
+
+    // ⚡ SECURITY KILL SWITCH: Evict all active refresh tokens for this user id immediately!
+    // This logs out hackers or old device sessions across all platforms instantly.
+    await deleteAllRefreshTokensForUser(user._id)
+
+    // Invalidate the single-use reset token immediately
+    await deleteResetTokenByToken(token)
+}
+
