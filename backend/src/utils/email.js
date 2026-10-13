@@ -73,7 +73,7 @@ export async function sendVerificationEmail(to, token) {
  * @param {string} token - The secure password reset token string
  */
 export async function sendPasswordResetEmail(to, token) {
-    const resetUrl = `${env.frontendUrl || "http://localhost:9000"}/api/v1/auth/reset-password?token=${token}`
+    const resetUrl = `${env.frontendUrl || "http://localhost:5173"}/reset-password?token=${token}`
 
     const mailOptions = {
         from: `"RestaurantOS Security" <${env.emailFrom}>`,
