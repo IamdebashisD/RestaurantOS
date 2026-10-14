@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
         {/* 🎉 Dynamic Alert: Success Dispatch Confirmation Banner */}
         {successMessage && (
             <div className="mb-6 p-4 bg-emerald-950/40 border border-emerald-800 text-emerald-200 text-sm font-medium rounded-xl text-center shadow-lg shadow-emerald-950/20 animate-fade-in">
-            {successMessage}
+                {successMessage}
             </div>
         )}
 
