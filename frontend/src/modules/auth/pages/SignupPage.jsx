@@ -53,17 +53,17 @@ export default function SignupPage() {
             {/* Brand Header */}
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-extrabold text-white tracking-tight">
-                Create <span className="text-emerald-500">Instance</span>
+                    Create <span className="text-emerald-500">Instance</span>
                 </h1>
                 <p className="text-neutral-400 text-sm mt-2">
-                Deploy your RestaurantOS workspace terminal profile.
+                    Deploy your RestaurantOS workspace terminal profile.
                 </p>
             </div>
 
             {/* ⚠️ Dynamic Backend Error Alert Banner */}
             {errorMessage && (
                 <div className="mb-6 p-3 bg-red-900/30 border border-red-800 text-red-200 text-sm font-medium rounded-lg text-center animate-fade-in">
-                {errorMessage}
+                    {errorMessage}
                 </div>
             )}
 
@@ -125,28 +125,28 @@ export default function SignupPage() {
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="absolute right-3 text-neutral-500 hover:text-neutral-300 transition-colors focus:outline-none cursor-pointer p-0.5 rounded"
                     >
-                    {showPassword ? <EyeOff className="w-4 h-4 select-none" /> : <Eye className="w-4 h-4 select-none" />}
+                        {showPassword ? <EyeOff className="w-4 h-4 select-none" /> : <Eye className="w-4 h-4 select-none" />}
                     </button>
                 </div>
                 </div>
 
                 {/* Submit Execution Button */}
                 <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 mt-2 shadow-lg shadow-emerald-950/20"
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 mt-2 shadow-lg shadow-emerald-950/20"
                 >
-                {isLoading ? "Provisioning Instance..." : "Register Master Console"}
+                    {isLoading ? "Provisioning Instance..." : "Register Master Console"}
                 </Button>
             </form>
 
             {/* Dynamic Client Handoff Navigation Link */}
             <div className="text-center mt-6 pt-6 border-t border-neutral-800/60">
                 <p className="text-xs text-neutral-500">
-                Already have an operational terminal?{" "}
-                <Link to="/signin" className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
-                    Sign In here
-                </Link>
+                    Already have an operational terminal?{" "}
+                    <Link to="/signin" className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+                        Sign In here
+                    </Link>
                 </p>
             </div>
         </div>
