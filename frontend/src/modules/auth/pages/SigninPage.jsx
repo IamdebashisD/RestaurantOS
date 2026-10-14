@@ -1,4 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
+import { useNavigate } from "react-router"
 import { Link } from "react-router" 
 import { Mail, Lock, Eye, EyeOff } from "lucide-react" 
 import { Button } from "../../../components/ui/button"
@@ -13,10 +15,18 @@ export default function SigninPage() {
 	const [errorMessage, setErrorMessage] = useState(null)
 	const [showPassword, setShowPassword] = useState(false)
 
+	const { user, setUser } = useAuth()
+	const navigate = useNavigate()
+
 	const handleInputChange = (e) => {
 		const { name, value } = e.target
 		setFormData((prev) => ({ ...prev, [name]: value }))
 	}
+
+
+	useEffect(() => {
+		if (user) navigate("/dashboard", { replace: true }) 
+	}, [user, navigate])
 
 	const handleFormSubmit = async (e) => {
 		e.preventDefault()
@@ -25,8 +35,14 @@ export default function SigninPage() {
 		
 		try {
 			const response = await api.post("/auth/signin", formData)
-			console.log(response?.data?.data?.user)
-			alert(`Login Successful! Welcome back.`)
+			// Save the authenticated profile directly into the broadcast tower!
+			setUser(response?.data?.data?.user)
+			// And Redirect or navigate to Dashboard
+			navigate("/dashboard", { replace: true })
+			
+			setTimeout(() => {
+				alert(`Login Successful! Welcome back.`)
+			}, 300);
 		} catch (error) {
 			console.error("❌ Raw Axios Error Object:", error)
 			const backendMessage = error?.response?.data?.message || "Connection to authentication server failed."
