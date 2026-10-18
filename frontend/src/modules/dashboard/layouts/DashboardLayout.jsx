@@ -56,7 +56,7 @@ export default function DashboardLayout() {
                         {/* 🟢 Live Restaurant Context Indicator Card Card */}
                         <div className="flex items-center gap-2.5 px-3 py-2 bg-emerald-950/20 border border-emerald-900/30 rounded-xl">
                             <Building className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span className="text-xs font-bold text-emerald-300 truncate max-w-[160px]">
+                            <span className="text-xs font-bold text-emerald-300 truncate max-w-40">
                                 {activeRestaurant?.name || "Loading Context..."}
                             </span>
                         </div>
