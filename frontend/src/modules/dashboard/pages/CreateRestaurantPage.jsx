@@ -161,7 +161,7 @@ export default function CreateRestaurantPage() {
                             name="description"
                             maxLength={1000}
                             placeholder="Enter kitchen parameters or business tagline details..."
-                            className="pl-10 pt-2.5 min-h-[80px] bg-neutral-950 border border-neutral-800 text-white placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg w-full text-sm font-sans transition-all focus:outline-none"
+                            className="pl-10 pt-2.5 min-h-20 bg-neutral-950 border border-neutral-800 text-white placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg w-full text-sm font-sans transition-all focus:outline-none"
                             value={formData.description}
                             onChange={handleInputChange}
                         />
