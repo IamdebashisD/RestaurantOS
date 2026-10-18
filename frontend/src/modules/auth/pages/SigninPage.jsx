@@ -15,7 +15,14 @@ export default function SigninPage() {
 	const [errorMessage, setErrorMessage] = useState(null)
 	const [showPassword, setShowPassword] = useState(false)
 
-	const { user, setUser } = useAuth()
+	const { 
+		user, 
+		setUser, 
+		loading, 
+		activeRestaurant, 
+		checkSession 
+	} = useAuth()
+	
 	const navigate = useNavigate()
 
 	const handleInputChange = (e) => {
@@ -25,8 +32,15 @@ export default function SigninPage() {
 
 
 	useEffect(() => {
-		if (user) navigate("/dashboard", { replace: true }) 
-	}, [user, navigate])
+		if (!loading && user) {
+			if (user?.restaurantId) {
+				console.log("🟢 Existing Workspace Located! Route Shift Target ID:", user.restaurantId)
+				navigate(`/dashboard/${user?.restaurantId}`, { replace: true })
+			} else {
+				navigate("/dashboard", { replace: true }) 
+			}
+		}
+	}, [user, loading, navigate])
 
 	const handleFormSubmit = async (e) => {
 		e.preventDefault()
@@ -34,18 +48,19 @@ export default function SigninPage() {
 		setErrorMessage(null)
 		
 		try {
-			const response = await api.post("/auth/signin", formData)
+			await api.post("/auth/signin", formData)
 			// Save the authenticated profile directly into the broadcast tower!
-			setUser(response?.data?.data?.user)
-			// And Redirect or navigate to Dashboard
-			navigate("/dashboard", { replace: true })
+
+			if (checkSession) {
+				await checkSession()
+			}
 			
-			setTimeout(() => {
-				alert(`Login Successful! Welcome back.`)
-			}, 300);
 		} catch (error) {
 			console.error("❌ Raw Axios Error Object:", error)
-			const backendMessage = error?.response?.data?.message || "Connection to authentication server failed."
+			const backendMessage = 
+				error?.response?.data?.message || 
+				"Connection to authentication server failed."
+
 			console.log(backendMessage)
 			setErrorMessage(backendMessage)
 		} finally {
