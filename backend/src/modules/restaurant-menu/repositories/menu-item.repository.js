@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { MenuItem } from "../models/menu-item.model.js";
 
 // Create Menu Item
@@ -21,28 +22,52 @@ export async function findMenuItemById(itemId, session) {
  * @returns {Promise<Array<Object>>}
  */
 export async function findMenuItemsByRestaurant(restaurantId, filters = {}, options = {}, session) {
-    const query = { restaurant: restaurantId }
+    const pipeline = [
+        // 1. Initial match on the tanent restaurant ID
+        { $match: { restaurant: new mongoose.Types.ObjectId(restaurantId) } },
+    ]
 
-    if (filters.category) {
-        query.category = filters.category
-    }
+    // 2. Optional direct availibility filtering
     if (filters.isAvailable !== undefined) {
-        query.isAvailable = filters.isAvailable
-    }
-    if (filters.search) {
-        query.name = { $regex: filters.search, $options: "i" }
+        pipeline.push({ $match: { isAvailable: filters.isAvailable } })
     }
 
-    const mongooseQuery = MenuItem
-        .find(query)
-        .populate("category", "name description displayOrder")
-        .sort({ category: 1, name: 1})
+    // 3. Optional full-text search againts the item name
+    if (filters.search?.trim()) {
+        pipeline.push({ $match: { name: { $regex: filters.search.trim(), $options: "i" } } })
+    }
 
-    if (options.skip) mongooseQuery.skip(options.skip)
-    if (options.limit) mongooseQuery.limit(options.limit)
-    if (session) mongooseQuery.session(session)
+    // 4. THE MAGIC JOIN: Join with the menu-categories collection
+    pipeline.push({
+        $lookup: {
+            from: "menucategories",
+            localField: "category",
+            foreignField: "_id",
+            as: "category"
+        }
+    })
 
-    return mongooseQuery.exec()
+    // 6. Unbox the join array into a single object wrapper
+    pipeline.push({ $unwind: "$category" })
+
+    if (filters.category?.trim()) {
+        pipeline.push({
+            $match: {
+                "category.name": { $regex: `^${filters.category.trim()}$`, $options: "i" }
+            }
+        })
+    }
+
+    // 7. Sort configurations
+    pipeline.push({ $sort: { "category.name": 1, name: 1  } })
+
+    if (options.skip) pipeline.push({ $skip: options.skip })
+    if (options.limit) pipeline.push({ $limit: options.limit })
+    
+    const queryExec = MenuItem.aggregate(pipeline)
+    if (session) queryExec.session(session)
+
+    return queryExec.exec()
 }
 
 export async function updateMenuItemById(itemId, updateData, session) {
@@ -59,14 +84,68 @@ export async function updateMenuItemById(itemId, updateData, session) {
  * @returns {Promise<number>}
  */
 export async function countMenuItemsByRestaurant(restaurantId, filters = {}, session) {
-    const query = { restaurant: restaurantId }
+    const pipeline = [
+        {
+            $match: {
+                restaurant: new mongoose.Types.ObjectId(restaurantId),
+            },
+        },
+    ]
 
-    if (filters.category) query.category = filters.category
-    if (filters.isAvailable !== undefined) query.isAvailable = filters.isAvailable
-    if (filters.search) query.name = { $regex: filters.search, $options: "i"}
+    // 1. Filter by availability
+    if (filters.isAvailable !== undefined) {
+        pipeline.push({
+            $match: {
+                isAvailable: filters.isAvailable,
+            },
+        })
+    }
 
-    const mongooseQuery = MenuItem.countDocuments(query)
-    if (session) mongooseQuery.session(session)
+    // 2. Search by menu item name
+    if (filters.search?.trim()) {
+        pipeline.push({
+            $match: {
+                name: {
+                    $regex: filters.search.trim(),
+                    $options: "i",
+                },
+            },
+        })
+    }
 
-    return mongooseQuery.exec()
+    // 3. Join the category collection
+    pipeline.push({
+        $lookup: {
+            from: "menucategories",
+            localField: "category",
+            foreignField: "_id",
+            as: "category",
+        },
+    })
+
+    // 4. Convert the category array into an object
+    pipeline.push({ $unwind: "$category", })
+
+    // 5. Apply the selected category filter
+    if (filters.category?.trim()) {
+        pipeline.push({
+            $match: {
+                "category.name": {
+                    $regex: `^${filters.category.trim()}$`,
+                    $options: "i",
+                },
+            },
+        })
+    }
+
+    // 6. Count the filtered documents
+    pipeline.push({ $count: "total", })
+
+    const queryExec = MenuItem.aggregate(pipeline)
+
+    if (session) queryExec.session(session)
+
+    const result = await queryExec.exec()
+
+    return result.length > 0 ? result[0].total : 0
 }
