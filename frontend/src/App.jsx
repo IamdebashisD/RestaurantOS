@@ -10,6 +10,8 @@ import ResetPasswordPage  from "./modules/auth/pages/ResetPasswordPage.jsx"
 
 import DashboardLayout from "./modules/dashboard/layouts/DashboardLayout.jsx"
 import CreateRestaurantPage from "./modules/dashboard/pages/CreateRestaurantPage.jsx"
+import MenuPage from "./modules/restaurant-menu/pages/MenuPage.jsx"
+import SystemConsoleOverview from "./modules/dashboard/pages/SystemConsoleOverview.jsx"
 
 
 
@@ -43,20 +45,12 @@ function App() {
 						{/* Passes the variable dynamically straight into the URL line to satisfy req.params.restaurantId! */}
 						<Route path="/dashboard/:restaurantId" element={<DashboardLayout />}>
 
-							<Route
-								index
-								element={
-									<div className="space-y-2">
-										<h3 className="text-2xl font-extrabold text-white">System Console Overview</h3>
-										<p className="text-neutral-400 text-sm">Select an active operational module module tab on the left sidebar terminal console to deploy metrics viewframes.</p>
-									</div>
-								} 
-							/>
+							<Route index element={<SystemConsoleOverview />} />
 
 							{/* (Your future features like /dashboard/:restaurantId/menu, /dashboard/:restaurantId/orders will be dropped right here!) */}
-
+							<Route path="menu" element={<MenuPage />}/>
 							{/* (Stage 3 menu-management components nested routes will slide right here!) */}
-
+							
 						</Route>
 						
 					</Route>
