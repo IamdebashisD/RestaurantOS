@@ -13,12 +13,14 @@ import {
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { api } from "../../../lib/axios"
+import AddDishDialog from "../components/AddDishDialog"
 
 
 export default function MenuPage() {
     const { restaurantId } = useParams()
 
     const [menuItems, setMenuItems] = useState([])
+    const [dbCategories, setDbCategories] = useState([])
     const [pagination, setPagination] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState(null)
@@ -27,6 +29,8 @@ export default function MenuPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [activeCategory, setActiveCategory] = useState("ALL")
     const [currentPage, setCurrentPage] = useState(1)
+
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
     const staticCategories = ["ALL", "STARTERS", "MAIN COURSE", "DESSERTS", "BEVERAGES", "FAST FOOD"]
 
@@ -45,13 +49,21 @@ export default function MenuPage() {
                 endpointUrl += `&search=${encodeURIComponent(searchQuery.trim())}`
             }
 
-            const response = await api.get(endpointUrl)
+            const [itemResponse, categoryResponse] = await Promise.all([
+                api.get(endpointUrl),
+                api.get(`restaurants/${restaurantId}/menu-categories`)
+            ])
 
             // Destructure your explicit service return keys: menuItems and pagination metadata object
-            const { menuItems: fetchedItems, meta: metaData } = response.data?.data || {}
+            const { menuItems: fetchedItems, meta: metaData } = itemResponse.data?.data || {}
+            const parsedCategories = 
+                categoryResponse.data?.data?.categories ||
+                categoryResponse.data?.data || 
+                []
 
             setMenuItems(fetchedItems || [])
             setPagination(metaData)
+            setDbCategories(parsedCategories)
         } catch (error) {
             setErrorMessage(error.response?.data?.message || "Failed to communicate with menu catalog registries.")
         } finally {
@@ -95,9 +107,12 @@ export default function MenuPage() {
                         <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
                     </Button>
 
-                    <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2 rounded-xl px-4 py-2 cursor-pointer shadow-lg shadow-emerald-950/20">
-                        <Plus className="w-4 h-4" />
-                        Add New Dish
+                    <Button
+                        onClick={() => setIsAddDialogOpen(true)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2 rounded-xl px-4 py-2 cursor-pointer shadow-lg shadow-emerald-950/20"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add New Dish
                     </Button>
                 </div>
             </div>
@@ -242,6 +257,13 @@ export default function MenuPage() {
                     )}
                 </div>
             )}
+
+            <AddDishDialog 
+                isOpen={isAddDialogOpen}
+                onClose={() => setIsAddDialogOpen(false)}
+                onRefreshCatalog={fetchMenuCatalog}
+                categories={dbCategories}
+            />
         </div>
     )
 }
