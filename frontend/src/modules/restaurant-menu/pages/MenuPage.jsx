@@ -133,16 +133,16 @@ export default function MenuPage() {
 
                 {searchQuery && (
                     <button
-                    type="button" // Prevents form submission flags from accidentally firing
-                    onClick={() => {
-                        setSearchQuery("") // Clears out the search text query state instantly
-                        setCurrentPage(1)  // Resets the pagination counter safely back to page 1
-                    }}
-                    className="absolute right-3 p-1 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-700"
-                    aria-label="Clear search query"
-                    >
-                    {/* ⚠️ Make sure to destructure 'X' alongside your other icons at the top of MenuPage.jsx */}
-                    <X className="w-3.5 h-3.5 select-none" />
+                        type="button" // Prevents form submission flags from accidentally firing
+                        onClick={() => {
+                            setSearchQuery("") // Clears out the search text query state instantly
+                            setCurrentPage(1)  // Resets the pagination counter safely back to page 1
+                        }}
+                        className="absolute right-3 p-1 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-neutral-700"
+                        aria-label="Clear search query"
+                        >
+                        {/* ⚠️ Make sure to destructure 'X' alongside your other icons at the top of MenuPage.jsx */}
+                        <X className="w-3.5 h-3.5 select-none" />
                     </button>
                 )}
             </div>
