@@ -254,7 +254,7 @@ export default function SettingsPage() {
                             id="street"
                             name="street"
                             className="bg-neutral-950 border-neutral-800 text-white rounded-xl text-sm"
-                            value={formData.street}
+                            value={formData.address.street}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                                 id="city"
                                 name="city"
                                 className="bg-neutral-950 border-neutral-800 text-white rounded-xl text-sm"
-                                value={formData.city}
+                                value={formData.address.city}
                                 onChange={handleInputChange}
                             />
                         </div>
@@ -276,7 +276,7 @@ export default function SettingsPage() {
                                 id="state"
                                 name="state"
                                 className="bg-neutral-950 border-neutral-800 text-white rounded-xl text-sm"
-                                value={formData.state}
+                                value={formData.address.state}
                                 onChange={handleInputChange}
                             />
                         </div>
@@ -286,7 +286,7 @@ export default function SettingsPage() {
                                 id="postalCode"
                                 name="postalCode"
                                 className="bg-neutral-950 border-neutral-800 text-white rounded-xl text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full transition-all"
-                                value={formData.postalCode}
+                                value={formData.address.postalCode}
                                 onChange={handleInputChange}
                             />
                         </div>
