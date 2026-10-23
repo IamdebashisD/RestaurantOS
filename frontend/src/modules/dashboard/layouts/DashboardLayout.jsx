@@ -37,7 +37,7 @@ export default function DashboardLayout() {
         { name: "Table Mapping",      path: `/dashboard/${restaurantId}/tables`,   icon: Layers },
         { name: "Live Orders",        path: `/dashboard/${restaurantId}/orders`,   icon: ClipboardList },
         { name: "Invoices & Billing", path: `/dashboard/${restaurantId}/invoices`, icon: Receipt },
-        { name: "Workspace Settings",  path: `/dashboard/${restaurantId}/settings`, icon: Settings },
+        { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
     ]
 
     return (
