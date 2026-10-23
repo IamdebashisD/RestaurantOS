@@ -10,7 +10,8 @@ import {
     LogOut,
     User,
     Building,
-    Settings
+    Settings,
+    Users
 } from "lucide-react"
 
 
@@ -38,6 +39,7 @@ export default function DashboardLayout() {
         { name: "Live Orders",        path: `/dashboard/${restaurantId}/orders`,   icon: ClipboardList },
         { name: "Invoices & Billing", path: `/dashboard/${restaurantId}/invoices`, icon: Receipt },
         { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
+        { name: "Workspace Staff",    path: `/dashboard/${restaurantId}/staff`,    icon: Users }, // just added this
     ]
 
     return (

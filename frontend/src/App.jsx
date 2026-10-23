@@ -13,6 +13,7 @@ import CreateRestaurantPage from "./modules/dashboard/pages/CreateRestaurantPage
 import MenuPage from "./modules/restaurant-menu/pages/MenuPage.jsx"
 import SystemConsoleOverview from "./modules/dashboard/pages/SystemConsoleOverview.jsx"
 import SettingsPage from "./modules/dashboard/pages/SettingsPage.jsx"
+import StaffPage from "./modules/restaurant-staff/pages/StaffPage.jsx"
 
 
 
@@ -92,6 +93,8 @@ function App() {
 							/>
 
 							<Route path="settings" element={<SettingsPage />}/>
+
+							<Route path="staff" element={<StaffPage />} />
 							
 						</Route>
 						
