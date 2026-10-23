@@ -15,6 +15,7 @@ export default function SettingsPage() {
 
     const [formData, setFormData] = useState({
         name: "",
+        slug: "",
         description: "",
         phone: "",
         email: "",
@@ -43,6 +44,7 @@ export default function SettingsPage() {
 
                 setFormData({
                     name: rest.name || "",
+                    slug: rest.slug || "",
                     description: rest.description || "",
                     phone: rest.phone || "",
                     email: rest.email || "",
