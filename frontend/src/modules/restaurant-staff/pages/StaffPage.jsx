@@ -221,6 +221,8 @@ export default function StaffPage() {
                             const displayStatus = member.status || "ACTIVE"
                             const isTargetProcessing = processingId === member._id
 
+                            const actionButtonBaseStyle = "flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 transition-all cursor-pointer gap-1 focus:outline-none"
+
                             return (
                                 <div
                                     key={member._id || member.id}
@@ -265,7 +267,7 @@ export default function StaffPage() {
                                         {/* Control A: Toggle status shifts */}
                                         <button 
                                             onClick={() => handleToggleStatus(member._id, displayStatus)} 
-                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-emerald-400 hover:border-emerald-900/40 transition-all cursor-pointer gap-1 group focus:outline-none"
+                                            className={`${actionButtonBaseStyle} hover:text-emerald-400 hover:border-emerald-900/40 group`}
                                         >
                                             {displayStatus === "ACTIVE" ? <ToggleRight className="w-4 h-4 text-emerald-500" /> : <ToggleLeft className="w-4 h-4" />}
                                             <span>{displayStatus === "ACTIVE" ? "Suspend" : "Activate"}</span>
@@ -274,7 +276,7 @@ export default function StaffPage() {
                                         {/* Control B: Cycle Roles */}
                                         <button 
                                             onClick={() => handleRoleCycle(member._id, displayRole)} 
-                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-amber-400 hover:border-amber-900/40 transition-all cursor-pointer gap-1 focus:outline-none"
+                                            className={`${actionButtonBaseStyle} hover:text-amber-400 hover:border-amber-900/40`}
                                         >
                                             <RoleIcon className="w-4 h-4 text-amber-500" />
                                             <span>Cycle Role</span>
@@ -283,7 +285,7 @@ export default function StaffPage() {
                                         {/* Control C: Evict Employee */}
                                         <button 
                                             onClick={() => handleRemoveStaff(member._id, displayName)} 
-                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-red-400 hover:border-red-900/40 transition-all cursor-pointer gap-1 focus:outline-none"
+                                            className={`${actionButtonBaseStyle} hover:text-red-400 hover:border-red-900/40`}
                                         >
                                             <Trash2 className="w-4 h-4 text-red-500/80" />
                                             <span>Remove</span>
@@ -293,7 +295,7 @@ export default function StaffPage() {
                                     )}
 
                                     {/* Lower Infrastructure Management Footer Card Row */}
-                                    <div className="border-t border-neutral-800/60 pt-3 flex items-center justify-between text-[11px] text-neutral-500 font-sans">
+                                    <div className="pt-3 flex items-center justify-between text-[11px] text-neutral-500 font-sans">
                                         <span className="inline-flex items-center gap-1">
                                             <Clock className="w-3.5 h-3.5 text-neutral-700" />
                                             Joined {member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-US", { month: "short", year: "2-digit" }) : "Recent"}
