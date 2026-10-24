@@ -9,17 +9,29 @@ import {
     UserCheck, 
     Mail, 
     Clock,
-    Shield 
+    Shield,
+    Trash2,
+    ToggleLeft,
+    ToggleRight,
+    ShieldAlert as RoleIcon
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { api } from "../../../lib/axios"
+import InviteStaffDialog from "../components/InviteStaffDialog"
+import { useAuth } from "../../auth/context/AuthContext"
 
 
 export default function StaffPage() {
     const { restaurantId } = useParams()
+    const { user } = useAuth()
+
     const [staffList, setStaffList] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState(null)
+    const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+    const [processingId, setProcessingId] = useState(null)
+
+    const isOwner = user?.role === "OWNER"
 
     const fetchStaffRoster = async () => {
         setIsLoading(true)
@@ -27,10 +39,10 @@ export default function StaffPage() {
 
         try {
             const response = await api.get(`/restaurants/${restaurantId}/staff`)
-            const roasterData = response.data?.data?.staff || response.data?.data || []
-            setStaffList(roasterData)
+            const rosterData = response.data?.data?.staff || response.data?.data || []
+            setStaffList(rosterData)
         } catch (error) {
-            console.error("❌ [Staff Roster Fetch Failed]:", error)
+            console.error("[Staff Roster Fetch Failed]:", error)
             setErrorMessage(error.response?.data?.message || "Failed to communicate with active team access registries.")
         } finally {
             setIsLoading(false)
@@ -42,6 +54,75 @@ export default function StaffPage() {
             fetchStaffRoster()
         }
     }, [restaurantId])
+
+    const handleToggleStatus = async (staffId, currentStatus) => {
+        setProcessingId(staffId)
+        const nextStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE"
+        try {
+            await api.patch(`/restaurants/${restaurantId}/staff/${staffId}`, { status: nextStatus })
+            setStaffList(
+                (prev) => prev.map(
+                    member => member._id === staffId 
+                        ? { ...member, status: nextStatus } 
+                        : member 
+                    )
+                )
+        } catch (error) {
+            alert(error.response?.data?.message || "Failed to modify membership status shifts.")
+        } finally {
+            setProcessingId(null)
+        }
+    }
+
+    const handleRoleCycle = async (staffId, currentRole) => {
+        if (currentRole === "OWNER") return
+        setProcessingId(staffId)
+        const rolesEnum = [
+            "MANAGER",
+            "CASHIER",
+            "KITCHEN_STAFF",
+            "WAITER"
+        ]
+        const currentIndex = rolesEnum.indexOf(currentRole)
+        const nextRole = rolesEnum[(currentIndex + 1) % rolesEnum.length]
+        try {
+            await api.patch(`/restaurants/${restaurantId}/staff/${staffId}`, { role: nextRole })
+            setStaffList(
+                (prev) => prev.map(
+                    member => member._id === staffId
+                        ? { ...member, role: nextRole }
+                        : member
+                )
+            )
+        } catch (error) {
+            alert(
+                error.response?.data?.message || 
+                "Failed to modify permission tier levels."
+            )
+        } finally {
+            setProcessingId(null)
+        }
+    }
+
+    const handleRemoveStaff = async (staffId, memberName) => {
+        if (!window.confirm(`⚠️ DANGER: Are you certain you want to permanently revoke all access clearances for ${memberName}?`)) return
+        setProcessingId(staffId)
+        try {
+            await api.delete(`/restaurants/${restaurantId}/staff/${staffId}`)
+            setStaffList(
+                (prev) => prev.map(
+                    member => member._id === staffId
+                        ? { ...member, status: "INACTIVE" }
+                        : member 
+                )
+            )
+            console.log(`🟢 [Soft-Deletion Synchronized]: ${memberName} set to INACTIVE.`);
+        } catch (error) {
+            alert(error.response?.data?.message || "Failed to terminate membership credentials record.")
+        } finally {
+            setProcessingId(null)
+        }
+    }
 
     const getRoleBadgeStyle = (role) => {
         switch (role?.toUpperCase()) {
@@ -86,7 +167,10 @@ export default function StaffPage() {
                         <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
                     </Button>
 
-                    <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2 rounded-xl px-4 py-2 cursor-pointer shadow-lg shadow-emerald-950/20 text-xs transition-all active:scale-[0.99]">
+                    <Button 
+                        onClick={() => setIsInviteDialogOpen(true)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2 rounded-xl px-4 py-2 cursor-pointer shadow-lg shadow-emerald-950/20 text-xs transition-all active:scale-[0.99]"
+                    >
                         <UserPlus className="w-4 h-4" />
                         Invite Staff Entry
                     </Button>
@@ -135,11 +219,16 @@ export default function StaffPage() {
                             const displayEmail = memberUser.email || "No email declared"
                             const displayRole = member.role || memberUser.role || "STAFF"
                             const displayStatus = member.status || "ACTIVE"
+                            const isTargetProcessing = processingId === member._id
 
                             return (
                                 <div
                                     key={member._id || member.id}
-                                    className="bg-neutral-900/40 backdrop-blur-md border border-neutral-800/80 p-5 rounded-2xl shadow-xl transition-all duration-300 hover:border-neutral-700/60 hover:-translate-y-0.5 group flex flex-col justify-between space-y-5"
+                                    className={
+                                        `bg-neutral-900/40 backdrop-blur-md border border-neutral-800/80 p-5 rounded-2xl shadow-xl 
+                                        transition-all duration-300 hover:border-neutral-700/60 group flex flex-col 
+                                        justify-between space-y-5 ${isTargetProcessing ? "opacity-40 animate-pulse pointer-events-none" : ""}`
+                                    }
                                 >
                                     <div className="space-y-3">
                                         {/* Header Row: Role Clearance Level */}
@@ -169,6 +258,40 @@ export default function StaffPage() {
                                         </div>
                                     </div>
 
+                                    {/* 🛡️ INLINE OWNER MANAGEMENT PANEL CONTROLS BUTTON MODULE GRID */}
+                                    {isOwner && displayRole !== "OWNER" && (
+                                        <div className="grid grid-cols-3 gap-2 border-t border-b border-neutral-800/60 py-3 text-[11px] font-medium">
+                                        
+                                        {/* Control A: Toggle status shifts */}
+                                        <button 
+                                            onClick={() => handleToggleStatus(member._id, displayStatus)} 
+                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-emerald-400 hover:border-emerald-900/40 transition-all cursor-pointer gap-1 group focus:outline-none"
+                                        >
+                                            {displayStatus === "ACTIVE" ? <ToggleRight className="w-4 h-4 text-emerald-500" /> : <ToggleLeft className="w-4 h-4" />}
+                                            <span>{displayStatus === "ACTIVE" ? "Suspend" : "Activate"}</span>
+                                        </button>
+
+                                        {/* Control B: Cycle Roles */}
+                                        <button 
+                                            onClick={() => handleRoleCycle(member._id, displayRole)} 
+                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-amber-400 hover:border-amber-900/40 transition-all cursor-pointer gap-1 focus:outline-none"
+                                        >
+                                            <RoleIcon className="w-4 h-4 text-amber-500" />
+                                            <span>Cycle Role</span>
+                                        </button>
+
+                                        {/* Control C: Evict Employee */}
+                                        <button 
+                                            onClick={() => handleRemoveStaff(member._id, displayName)} 
+                                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-red-400 hover:border-red-900/40 transition-all cursor-pointer gap-1 focus:outline-none"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-red-500/80" />
+                                            <span>Remove</span>
+                                        </button>
+
+                                        </div>
+                                    )}
+
                                     {/* Lower Infrastructure Management Footer Card Row */}
                                     <div className="border-t border-neutral-800/60 pt-3 flex items-center justify-between text-[11px] text-neutral-500 font-sans">
                                         <span className="inline-flex items-center gap-1">
@@ -188,6 +311,12 @@ export default function StaffPage() {
 
                 </div>
             )}
+
+            <InviteStaffDialog 
+                isOpen={isInviteDialogOpen}
+                onClose={() => setIsInviteDialogOpen(false)}
+                onRefreshRoster={fetchStaffRoster}
+            />
 
         </div>
     )
