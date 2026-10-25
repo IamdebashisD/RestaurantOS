@@ -14,6 +14,7 @@ import MenuPage from "./modules/restaurant-menu/pages/MenuPage.jsx"
 import SystemConsoleOverview from "./modules/dashboard/pages/SystemConsoleOverview.jsx"
 import SettingsPage from "./modules/dashboard/pages/SettingsPage.jsx"
 import StaffPage from "./modules/restaurant-staff/pages/StaffPage.jsx"
+import TablesPage from "./modules/restaurant-table/pages/TablesPage.jsx"
 
 
 
@@ -62,15 +63,7 @@ function App() {
 								} 
 							/>
 							
-							<Route 
-								path="tables" 
-								element={
-								<div className="space-y-2">
-									<h3 className="text-2xl font-black text-white">Table Mapping</h3>
-									<p className="text-neutral-400 text-sm">Organize your tables</p>
-								</div>
-								} 
-							/>
+							<Route path="tables" element={<TablesPage />} />
 
 							<Route 
 								path="orders" 
