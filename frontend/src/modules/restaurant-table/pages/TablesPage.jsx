@@ -9,7 +9,8 @@ import {
     ToggleRight,
     Trash2,
     CheckCircle2,
-    ShieldAlert
+    ShieldAlert,
+    Pencil
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import TableDialog from "../components/TableDialog"
@@ -158,13 +159,17 @@ export default function TablesPage() {
                             <span>Active Dining Service Floor ({activeTables.length})</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full auto-rows-fr">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full auto-rows-fr">
                             {activeTables.map((table) => {
                                 const isProcessing = processingId === table._id
                                 const configColors = getStatusColorConfig(table.status)
 
                                 return (
-                                    <div key={table._id} className={`border p-5 rounded-2xl flex flex-col justify-between space-y-4 relative shadow-xl transition-all duration-300 hover:border-neutral-700 select-none group ${configColors} ${isProcessing ? "opacity-30 animate-pulse pointer-events-none" : ""}`}>
+                                    <div 
+                                        key={table._id} 
+                                        className={`border p-5 rounded-2xl flex flex-col justify-between space-y-4 relative shadow-xl transition-all duration-300 hover:border-neutral-700 select-none group ${configColors} 
+                                        ${isProcessing ? "opacity-30 animate-pulse pointer-events-none" : ""}`}
+                                    >
                                         <div className="flex justify-between items-start">
                                             <div className="space-y-0.5">
                                                 <span className="text-[10px] text-neutral-500 font-mono font-bold uppercase tracking-wider block">TABLE</span>
@@ -195,7 +200,7 @@ export default function TablesPage() {
                                                         onClick={() => handleTriggerEditMode(table)} 
                                                         className="p-1.5 rounded-lg bg-neutral-950/40 border border-neutral-800 text-neutral-500 hover:text-amber-400 cursor-pointer transition-colors"
                                                     >
-                                                        <Plus className="w-3.5 h-3.5 rotate-45" />
+                                                        <Pencil className="w-3.5 h-3.5" />
                                                     </button>
                                                     <button 
                                                         onClick={() => handleSoftDeleteTable(table._id, table.tableNumber)} 
@@ -214,19 +219,24 @@ export default function TablesPage() {
 
                     {/* Section B: Stored Broken-down / Inactive Units Storage Rack */}
                     {inactiveTables.length > 0 && (
-                        <div className="space-y-4 pt-6 mt-6 border-t border-neutral-800/60">
+                        <div className="space-y-4 pt-6 mt-6 border-t border-neutral-800/60 w-full animate-scale-in">
                             <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">
                                 <ShieldAlert className="w-4 h-4 text-neutral-600" /><span>Stored / Deactivated Inventory Node Units ({inactiveTables.length})</span>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <div className="grid grid-cols-1 gap-3 w-full">
                                 {inactiveTables.map((table) => (
                                     <div 
                                         key={table._id} 
-                                        className="border border-neutral-800/80 bg-neutral-950/40 p-4 rounded-xl flex items-center justify-between text-neutral-500 opacity-40 font-mono text-xs"
+                                        className="border border-neutral-800/40 bg-neutral-950/20 px-5 py-4 rounded-xl flex items-center justify-between text-neutral-500 opacity-40 font-mono text-xs select-none w-full shadow-md"
                                     >
-                                        <span className="font-bold">T-{table.tableNumber} ({table.capacity} Pax)</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-600 select-none">INACTIVE</span>
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-neutral-600 animate-pulse" />
+                                            <span className="font-bold text-neutral-300">Table {table.tableNumber}</span>
+                                            <span className="text-neutral-600 text-[11px]">({table.capacity} Seats Max Capacity)</span>
+                                        </div>
+
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 select-none">INACTIVE</span>
                                     </div>
                                 ))}
                             </div>
