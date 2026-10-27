@@ -15,6 +15,7 @@ import SystemConsoleOverview from "./modules/dashboard/pages/SystemConsoleOvervi
 import SettingsPage from "./modules/dashboard/pages/SettingsPage.jsx"
 import StaffPage from "./modules/restaurant-staff/pages/StaffPage.jsx"
 import TablesPage from "./modules/restaurant-table/pages/TablesPage.jsx"
+import ReservationsPage from "./modules/reservation/pages/ReservationsPage.jsx"
 
 
 
@@ -64,6 +65,7 @@ function App() {
 							/>
 							
 							<Route path="tables" element={<TablesPage />} />
+							<Route path="reservations" element={<ReservationsPage />} />
 
 							<Route 
 								path="orders" 
