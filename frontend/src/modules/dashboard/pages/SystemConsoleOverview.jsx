@@ -7,7 +7,8 @@ import {
     Layers,
     ArrowRight,
     Activity,
-    CheckCircle2
+    CheckCircle2,
+    Calendar
 } from "lucide-react"
 import { useAuth } from "../../../modules/auth/context/AuthContext"
 import { api } from "../../../lib/axios.js"
@@ -19,34 +20,76 @@ export default function SystemConsoleOverview() {
     const [metrics, setMetrics] = useState({
         totalDishes: 0,
         activeStaff: 1, // Defaults to 1 for the active owner session
-        occupiedTables: 0
+        occupiedTables: 0,
+        totalReservations: 0
     })
     const [isLoading, setIsLoading] = useState(true)
+    const userId = user?.id || user?._id
 
     useEffect(() => {
+        let isMounted = true
+
         async function loadDashboardMetrics() {
             if (!restaurantId) return
-            setIsLoading(true)
+
             try {
-                // 🚀 BATCH FETCH DATA: Pull background data properties from your active backend clusters concurrently!
-                const menuResponse = await api.get(`/restaurant-menu/${restaurantId}`).catch(() => null)
+                // BATCH FETCH DATA: Pull background data properties from your active backend clusters concurrently!
+                const [menuResponse, staffResponse, tablesResponse, reservationsResponse] = await Promise.all([
+                    // Future expansion: Add more concurrent API calls here for other metrics like staff, tables, etc.
+                    api.get(`/restaurants/${restaurantId}/menu-items`).catch(() => null),
+                    api.get(`/restaurants/${restaurantId}/staff`).catch(() => null),
+                    api.get(`/restaurants/${restaurantId}/tables`).catch(() => null),
+                    api.get(`/restaurants/${restaurantId}/reservations`).catch(() => null)
+                ])
 
-                const totalDishesFound = menuResponse?.data?.data?.items?.length || menuResponse?.data?.data?.length || 0
+                const totalDishesFound = menuResponse?.data?.data?.meta?.totalItems 
+                    || menuResponse?.data?.data?.length 
+                    || 0
+                const staffList = staffResponse?.data?.data?.staff 
+                    || staffResponse?.data?.data?.staffMembers 
+                    || staffResponse?.data?.data 
+                    || []
+                const tablesList = tablesResponse.data?.data?.tables 
+                    || tablesResponse.data?.data 
+                    || []
+                const reservationsList = reservationsResponse?.data?.data?.reservations 
+                    || reservationsResponse?.data?.data 
+                    || []
 
+                const occupiedTablesCount = tablesList.filter(t => t.status === "OCCUPIED").length
+                const finalStaffCount = staffList.length > 0 ? staffList.length : (user?.role === "OWNER" ? 1 : 2)
+
+                // ATOMIC UPDATE: Commit all values in a single state change to prevent re-render stuttering!
                 setMetrics({
                     totalDishes: totalDishesFound,
-                    activeStaff: user?.role === "OWNER" ? 1 : 2,
-                    occupiedTables: 0
+                    activeStaff: finalStaffCount,
+                    occupiedTables: occupiedTablesCount,
+                    totalReservations: reservationsList.length
                 })
-            } catch (err) {
-                console.error("❌ Failed to aggregate live system overview tracking parameters:", err)
-            } finally {
+                // Instantly turn off loading state after metrics are fetched and set
                 setIsLoading(false)
+
+            } catch (err) {
+                console.error("Failed to aggregate live system overview tracking parameters:", err)
+                if (isMounted) setIsLoading(false)
             }
         }
         loadDashboardMetrics()
-    }, [restaurantId, user])
 
+        return () => {
+            isMounted = false
+        }
+    }, [restaurantId, userId])
+
+    if (isLoading) {
+        return (
+            <div className="text-center py-32 text-neutral-500 font-mono text-xs animate-pulse select-none">
+                Aggregating Terminal Operational Metrics...
+            </div>
+        )
+    }
+
+    
     return (
         <div className="space-y-8 animate-fade-in">
 
@@ -126,6 +169,27 @@ export default function SystemConsoleOverview() {
                     <div className="mt-4 pt-4 border-t border-neutral-800/60 flex items-center justify-between">
                         <Link to={`/dashboard/${restaurantId}/tables`} className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold inline-flex items-center gap-1 group/link">
                             Launch Floor Maps
+                            <ArrowRight className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
+                        </Link>
+                    </div>
+                </div>
+
+                {/* 🔥 NEW METRIC NODE D: RESERVATIONS BOOKINGS TRACKER */}
+                <div className="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-neutral-700/60 transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <span className="text-neutral-500 text-xs font-bold uppercase tracking-wider">Active Bookings Desk</span>
+                            <h3 className="text-4xl font-black text-white font-mono mt-1">
+                                {isLoading ? "..." : metrics.totalReservations}
+                            </h3>
+                        </div>
+                        <div className="w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-xl flex items-center justify-center text-emerald-400">
+                            <Calendar className="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-neutral-800/60 flex items-center justify-between">
+                        <Link to={`/dashboard/${restaurantId}/reservations`} className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold inline-flex items-center gap-1 group/link">
+                            View Bookings Desk
                             <ArrowRight className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
                         </Link>
                     </div>
