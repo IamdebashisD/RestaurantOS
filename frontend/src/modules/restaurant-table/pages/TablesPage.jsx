@@ -80,7 +80,7 @@ export default function TablesPage() {
         setProcessingId(tableId)
 
         try {
-            await api.delete(`restaurants/${restaurantId}/tables/${tableId}`)
+            await api.delete(`/restaurants/${restaurantId}/tables/${tableId}`)
             setTablesList(prev => prev.map(t => t._id === tableId ? { ...t, status: "INACTIVE" } : t))
         } catch (error) {
             alert(error.response?.data?.message || "Failed to soft-deactivate seating node.")

@@ -38,7 +38,7 @@ export default function ReservationsPage() {
 
         try {
             const [resResponse, tablesResponse] = await Promise.all([
-                api.get(`restaurants/${restaurantId}/reservations`),
+                api.get(`/restaurants/${restaurantId}/reservations`),
                 api.get(`/restaurants/${restaurantId}/tables`)
             ])
 
