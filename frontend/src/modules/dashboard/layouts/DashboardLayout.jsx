@@ -11,7 +11,9 @@ import {
     User,
     Building,
     Settings,
-    Users
+    Users,
+    Calendar,
+    FolderHeart,
 } from "lucide-react"
 
 
@@ -34,8 +36,10 @@ export default function DashboardLayout() {
     const navItems = [
         { name: "Overview",           path: `/dashboard/${restaurantId}`,          icon: LayoutDashboard },
         { name: "Restaurant Menu",    path: `/dashboard/${restaurantId}/menu`,     icon: UtensilsCrossed },
+        { name: "Menu Categories",    path: `/dashboard/${restaurantId}/categories`, icon: FolderHeart },
         { name: "Kitchen Display",    path: `/dashboard/${restaurantId}/kitchen`,  icon: ChefHat },
         { name: "Table Mapping",      path: `/dashboard/${restaurantId}/tables`,   icon: Layers },
+        { name: "Reservation Desk",   path: `/dashboard/${restaurantId}/reservations`, icon: Calendar },
         { name: "Live Orders",        path: `/dashboard/${restaurantId}/orders`,   icon: ClipboardList },
         { name: "Invoices & Billing", path: `/dashboard/${restaurantId}/invoices`, icon: Receipt },
         { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
@@ -47,7 +51,7 @@ export default function DashboardLayout() {
 
             {/* 🎛️ FIXED LEFT SIDEBAR NAVIGATION CONSOLE */}
             <aside className="fixed inset-y-0 left-0 z-20 w-64 border-r border-neutral-800 bg-neutral-900/50 backdrop-blur-xl flex flex-col justify-between p-6">
-                <div className="space-y-8">
+                <div className="space-y-8 w-full">
                     {/* Main Identity Header */}
                     <div className="px-2 space-y-3">
                         <div>
@@ -67,7 +71,7 @@ export default function DashboardLayout() {
                     </div>
 
                     {/* Navigation Item Map Grid Link Matrix */}
-                    <nav className="space-y-1">
+                    <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-290px)] pr-1 w-full shrink-0 scroll-smooth touch-pan-y will-change-[scroll-top] scrollbar-none [&::-webkit-scrollbar]:hidden">
                         {navItems.map((item) => {
                             const Icon = item.icon
                             const isActive = location.pathname === item.path
@@ -76,14 +80,14 @@ export default function DashboardLayout() {
                                 <Link
                                     key={item.path}
                                     to={item.path}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group duration-200 cursor-pointer ${
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group duration-200 cursor-pointer select-none ${
                                         isActive 
                                         ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950/40" 
                                         : "text-neutral-400 hover:bg-neutral-800/60 hover:text-white"
                                     }`}
                                 >
-                                <Icon className={`w-4 h-4 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-neutral-400 group-hover:text-emerald-400"}`} />
-                                {item.name}
+                                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-neutral-400 group-hover:text-emerald-400"}`} />
+                                    {item.name}
                                 </Link>
                             )
                         })}
