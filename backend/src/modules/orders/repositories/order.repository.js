@@ -11,28 +11,28 @@ export async function createOrder(orderData, session) {
 export async function findOrderById(orderId, session) {
     const query = Order.findById(orderId)
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 // Find all Orders for a Restaurant
 export async function findOrdersByRestaurant(restaurantId, session) {
     const query = Order.find({ restaurant: restaurantId }).sort({ createdAt: -1 })
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 // Find all Orders for a Table
 export async function findOrdersByTable(tableId, session) {
     const query = Order.find({ table: tableId }).sort({ createdAt: -1 })
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 // Find all Orders for a Customer
 export async function findOrdersByCustomer(customerId, session) {
     const query = Order.find({ customer: customerId }).sort({ createAt: -1 })
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 // Update Order
@@ -48,7 +48,7 @@ export async function updateOrderById(orderId, updateData,  session) {
         }
     )
     if (session) query.session(session)
-    return query
+    return query.exec()
 }
 
 
