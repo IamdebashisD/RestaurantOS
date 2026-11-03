@@ -11,7 +11,8 @@ import {
     ChefHat,
     Truck,
     DollarSign,
-    Ban
+    Ban,
+    Pencil
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { api } from "../../../lib/axios"
@@ -29,6 +30,7 @@ export default function OrdersPage() {
     const [errorMessage, setErrorMessage] = useState(null)
     const [processingId, setProcessingId] = useState(null)
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false)
+    const [editingOrder, setEditingOrder] = useState(null)
 
     const loadOrdersWorkspace = useCallback(async () => {
         setIsLoading(true)
@@ -216,6 +218,14 @@ export default function OrdersPage() {
                                 >
                                     Verify & Confirm Ticket
                                 </button>
+
+                                <button 
+                                    onClick={() => { setEditingOrder(order); setIsOrderDialogOpen(true); }}
+                                    className="py-2 px-3 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-amber-400 hover:border-amber-900/30 transition-all cursor-pointer font-sans flex items-center justify-center gap-1"
+                                >
+                                    <Pencil className="w-3 h-3 text-amber-500" /> Edit Items
+                                </button>
+
 
                                 {/* 🔴 INLINE CANCEL SWITCH TRIGGER */}
                                 <button
@@ -422,9 +432,10 @@ export default function OrdersPage() {
             {/* ⚡ MOUNT WIZARD LAYOUT PORTAL */}
             <OrderDialog
                 isOpen={isOrderDialogOpen}
-                onClose={() => setIsOrderDialogOpen(false)}
+                onClose={() => { setIsOrderDialogOpen(false); setEditingOrder(null); }}
                 onRefresh={loadOrdersWorkspace}
                 activeTables={tables.filter(t => t.status !== "INACTIVE")}
+                editingOrder={editingOrder}
             />
 
         </div>

@@ -7,9 +7,8 @@ import { Label } from "../../../components/ui/label"
 import { api } from "../../../lib/axios"
 
 
-export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables = [] }) {
+export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables = [], editingOrder = null }) {
     const { restaurantId } = useParams()
-    const MAX = Infinity
 
     const [menuItems, setMenuItems] = useState([])
     const [selectedTable, setSelectedTable] = useState("")
@@ -19,6 +18,8 @@ export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables =
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
+    const isEditMode = !!editingOrder 
+
     // Load Menu Item to selection dropdown
     useEffect(() => {
         if (isOpen && restaurantId) {
@@ -26,13 +27,21 @@ export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables =
                 .then(res => setMenuItems(res.data?.data?.menuItems || res?.data?.data || []))
                 .catch(err => console.error("Failed loading catalog items for basket:", err))
         }
-        if (!isOpen) {
+
+        if (isOpen && isEditMode && editingOrder) {
+            setSelectedTable(editingOrder.table || "")
+            setNotes(editingOrder.notes || "")
+            setBasket(editingOrder.items?.map(item => ({
+                menuItem: item.menuItem,
+                quantity: item.quantity
+            })) || [])
+        } else if (!isOpen) {
             setSelectedTable("")
             setBasket([])
             setNotes("")
             setErrorMessage(null)
         }
-    }, [isOpen, restaurantId])
+    }, [isOpen, restaurantId, editingOrder, isEditMode])
 
     if (!isOpen) return null
 
@@ -57,7 +66,8 @@ export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables =
     const handleFormSubmit = async (e) => {
         e.preventDefault()
 
-        if (basket.length === 0) {
+        const cleanBasket = basket.filter(item => item.menuItem && item.menuItem.trim() !== "")
+        if (cleanBasket.length === 0) {
             setErrorMessage("Order must contain at least one menu item.")
             return
         }
@@ -76,7 +86,11 @@ export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables =
         }
 
         try {
-            await api.post(`/restaurants/${restaurantId}/orders`, payload)
+            if (isEditMode) {
+                await api.patch(`/restaurants/${restaurantId}/orders/${editingOrder._id}`, payload)
+            } else {
+                await api.post(`/restaurants/${restaurantId}/orders`, payload)
+            }
             onRefresh()
             onClose()
         } catch (error) {
