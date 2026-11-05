@@ -78,7 +78,7 @@ export default function OrderDialog({ isOpen, onClose, onRefresh, activeTables =
         // EXACT DTO PAYLOAD ALIGNMENT: Strict keys only, no customer/prices to bypass .strict()
         const payload = {
             table: selectedTable,
-            items: basket.map(item => ({
+            items: cleanBasket.map(item => ({
                 menuItem: item.menuItem,
                 quantity: item.quantity
             })),
