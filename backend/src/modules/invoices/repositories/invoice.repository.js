@@ -72,3 +72,8 @@ export async function updateInvoiceById(invoiceId, updateData, session) {
     if (session) query.session(session)
     return query.exec()
 }
+
+// 7. Count total Invoices
+export async function countInvoices(restaurantId) {
+    return Invoice.countDocuments({ restaurant: restaurantId}).exec()
+}

@@ -10,6 +10,7 @@ import {
     findInvoicesByRestaurant,
     findInvoiceByNumber,
     updateInvoiceById,
+    countInvoices
 } from "../repositories/invoice.repository.js"
 
 import { findOrderById, updateOrderById } from "../../orders/repositories/order.repository.js"
@@ -120,13 +121,21 @@ export async function getRestaurantInvoicesService({ restaurantId, page = 1, lim
     const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10)))
     const skip = (parsedPage - 1) * parsedLimit
 
-    const invoices = await findInvoicesByRestaurant(restaurantId, { skip, limit: parsedLimit })
+    const [invoices, totalInvoices] = await Promise.all([
+        findInvoicesByRestaurant(restaurantId, { skip, limit: parsedLimit }),
+        countInvoices(restaurantId)
+    ])
+    const totalPages = totalInvoices === 0 ? 0 : Math.ceil(totalInvoices / parsedLimit)
+    console.log(totalPages)
+    
 
     return {
         invoices,
-        pagination: {
+        meta: {
             page: parsedPage,
-            limit: parsedLimit
+            limit: parsedLimit,
+            totalInvoices,
+            totalPages: totalPages || 1
         }
     }
 }
