@@ -16,6 +16,9 @@ import SettingsPage from "./modules/dashboard/pages/SettingsPage.jsx"
 import StaffPage from "./modules/restaurant-staff/pages/StaffPage.jsx"
 import TablesPage from "./modules/restaurant-table/pages/TablesPage.jsx"
 import ReservationsPage from "./modules/reservation/pages/ReservationsPage.jsx"
+import CategoriesPage from "./modules/menu-category/pages/CategoriesPage.jsx"
+import OrdersPage from "./modules/order/pages/OrdersPage.jsx"
+import InvoicesPage from "./modules/invoices/pages/InvoicesPage.jsx"
 
 
 
@@ -54,6 +57,8 @@ function App() {
 							{/* (Your future features like /dashboard/:restaurantId/menu, /dashboard/:restaurantId/orders will be dropped right here!) */}
 							<Route path="menu" element={<MenuPage />}/>
 							
+							<Route path="categories" element={<CategoriesPage />}/>
+							
 							<Route 
 								path="kitchen" 
 								element={
@@ -66,26 +71,9 @@ function App() {
 							
 							<Route path="tables" element={<TablesPage />} />
 							<Route path="reservations" element={<ReservationsPage />} />
+							<Route path="orders" element={<OrdersPage />} />
 
-							<Route 
-								path="orders" 
-								element={
-								<div className="space-y-2">
-									<h3 className="text-2xl font-black text-white">Live Orders</h3>
-									<p className="text-neutral-400 text-sm">Live Orders</p>
-								</div>
-								} 
-							/>
-
-							<Route 
-								path="invoices" 
-								element={
-								<div className="space-y-2">
-									<h3 className="text-2xl font-black text-white">Invoices & Financial Billing</h3>
-									<p className="text-neutral-400 text-sm">Review guest payment histories, track sales tax distribution matrix blocks, and audit active merchant transactions.</p>
-								</div>
-								} 
-							/>
+							<Route path="invoices" element={<InvoicesPage />} />
 
 							<Route path="settings" element={<SettingsPage />}/>
 
