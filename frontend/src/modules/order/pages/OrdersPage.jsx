@@ -12,11 +12,13 @@ import {
     Truck,
     DollarSign,
     Ban,
-    Pencil
+    Pencil,
+    Receipt
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { api } from "../../../lib/axios"
 import OrderDialog from "../components/OrderDialog"
+import InvoiceDialog from "../../invoices/components/invoiceDialog"
 
 
 
@@ -31,6 +33,7 @@ export default function OrdersPage() {
     const [processingId, setProcessingId] = useState(null)
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false)
     const [editingOrder, setEditingOrder] = useState(null)
+    const [invoicingOrder, setInvoicingOrder] = useState(null)
 
     const loadOrdersWorkspace = useCallback(async () => {
         setIsLoading(true)
@@ -286,25 +289,43 @@ export default function OrdersPage() {
                         )}
 
                         {/* E. SERVED CARD CONTEXT TRACKS */}
-                        {order.status === "SERVED" && order.paymentStatus !== "PAID" && (
-                            <button
-                                onClick={() => handleAdvanceOrderState(order._id, "pay")}
-                                className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all cursor-pointer font-sans shadow-md"
-                            >
-                                <DollarSign className="w-3.5 h-3.5 inline mr-1" /> Settle & Process Payment
-                            </button>
+                        {order.status === "SERVED"  && (
+                            <div className="w-full">
+                                {order.paymentStatus !== "PAID" ? (
+                                    <button
+                                        onClick={() => handleAdvanceOrderState(order._id, "pay")}
+                                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all cursor-pointer font-sans shadow-md flex items-center justify-center gap-1.5"
+                                    >
+                                        <DollarSign className="w-3.5 h-3.5" /> Settle & Process Payment
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleAdvanceOrderState(order._id, "complete")}
+                                        className="w-full py-2.5 px-3 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-emerald-400 hover:border-emerald-950/30 transition-all cursor-pointer font-sans flex items-center justify-center gap-1.5"
+                                    >
+                                        🏁 Advance Ticket to Completed
+                                    </button>
+                                )}
+                            </div>
                         )}
 
-                        {order.status === "SERVED" && order.paymentStatus === "PAID" && (
-                            <button
-                                onClick={() => handleAdvanceOrderState(order._id, "complete")}
-                                className="w-full py-2.5 px-3 rounded-xl bg-neutral-950/40 border border-neutral-800 text-neutral-400 hover:text-emerald-400 hover:border-emerald-950/30 transition-all cursor-pointer font-sans"
-                            >
-                                🏁 Archive & Close Order
-                            </button>
+                        {/* F. COMPLETED CARD CONTEXT TRACK (Exposes the deployment link window!) */}
+                        {order.status === "COMPLETED" && (
+                            <div className="flex flex-col gap-2 w-full">
+                                <button
+                                    onClick={() => setInvoicingOrder(order)}
+                                    className="w-full py-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-emerald-400 hover:border-emerald-900/30 font-bold transition-all cursor-pointer font-sans flex items-center justify-center gap-1.5 animate-pulse"
+                                >
+                                    <Receipt className="w-3.5 h-3.5 text-emerald-400" /> Generate Audit Invoice
+                                </button>
+                                <div className="w-full py-2 bg-neutral-950/40 border border-neutral-900 text-neutral-600 text-[9px] font-mono text-center rounded-xl select-none">
+                                    Fulfillment Process Settled
+                                </div>
+                            </div>
                         )}
 
-                        {["COMPLETED", "CANCELLED"].includes(order.status?.toUpperCase()) && (
+                        {/* G. CANCELLED CARD CONTEXT TRACK */}
+                        {order.status === "CANCELLED" && (
                             <div className="w-full py-2 bg-neutral-950/40 border border-neutral-900 text-neutral-600 text-[9px] font-mono text-center rounded-xl select-none">
                                 Operational Ledger Block Locked
                             </div>
@@ -436,6 +457,15 @@ export default function OrdersPage() {
                 onRefresh={loadOrdersWorkspace}
                 activeTables={tables.filter(t => t.status !== "INACTIVE")}
                 editingOrder={editingOrder}
+            />
+
+            <InvoiceDialog
+                isOpen={!!invoicingOrder}
+                onClose={() => setInvoicingOrder(null)}
+                onRefresh={loadOrdersWorkspace}
+                restaurantId={restaurantId}
+                orderId={invoicingOrder?._id}
+                orderTotal={invoicingOrder?.totalAmount || 0}
             />
 
         </div>
