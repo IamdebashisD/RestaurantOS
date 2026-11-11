@@ -181,11 +181,5 @@ export default function ProcessPaymentDialog({
             </div>
         </div>
     )
-
-
-
-
-
-
-
 }
+
