@@ -67,7 +67,6 @@ const paymentSchema = new mongoose.Schema(
         transactionId: {
             type: String,
             trim: true,
-            default: null,
         },
 
         paidAt: {

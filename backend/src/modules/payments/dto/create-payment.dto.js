@@ -17,7 +17,8 @@ export const createPaymentDto = z.object({
         .string()
         .trim()
         .min(1, "Transaction ID cannot be empty")
-        .nullish(),
+        .optional()
+        .transform(val => val || undefined),
 
     gatewayMetadata: z
         .record(z.string(), z.unknown())

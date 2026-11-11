@@ -24,7 +24,7 @@ export async function createPaymentService({
     restaurantId,
     invoiceId, 
     method, 
-    transactionId = null , 
+    transactionId = undefined, 
     gatewayMetadata = {} 
 }) {
     const preCheckInvoice = await findInvoiceById(invoiceId)
