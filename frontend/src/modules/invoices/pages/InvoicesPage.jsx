@@ -20,6 +20,8 @@ import {
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { api } from "../../../lib/axios"
+import ProcessPaymentDialog from "../../payments/components/ProcessPaymentDialog"
+
 
 export default function InvoicesPage() {
     const { restaurantId } = useParams()
@@ -33,6 +35,8 @@ export default function InvoicesPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState(null)
     const [processingId, setProcessingId] = useState(null)
+
+    const [settlingInvoice, setSettlingInvoice] = useState(null)
 
     // SYNCRONIZED LEDGER WITH BACKEND PIPELINE
     const loadInvoicesWorkspace = useCallback(async () => {
@@ -355,7 +359,7 @@ export default function InvoicesPage() {
                                 {selectedInvoice.status === "ISSUED" && (
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
-                                            onClick={() => handleInvoiceAction(selectedInvoice._id, "pay")}
+                                            onClick={() => setSettlingInvoice(selectedInvoice)}
                                             className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
                                         >
                                             <CheckCircle2 className="w-3.5 h-3.5" /> Settle Dues
@@ -402,6 +406,17 @@ export default function InvoicesPage() {
                 </div>
 
             </div>
+
+            <ProcessPaymentDialog
+                isOpen={!!settlingInvoice}
+                onClose={() => setSettlingInvoice(null)}
+                onRefresh={() => {
+                    loadInvoicesWorkspace()
+                    setSelectedInvoice(null)
+                }}
+                restaurantId={restaurantId}
+                invoice={settlingInvoice}
+            />
 
         </div>
     )
