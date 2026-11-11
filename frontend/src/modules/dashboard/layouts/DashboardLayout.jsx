@@ -14,6 +14,7 @@ import {
     Users,
     Calendar,
     FolderHeart,
+    Coins,
 } from "lucide-react"
 
 
@@ -42,6 +43,7 @@ export default function DashboardLayout() {
         { name: "Reservation Desk",   path: `/dashboard/${restaurantId}/reservations`, icon: Calendar },
         { name: "Live Orders",        path: `/dashboard/${restaurantId}/orders`,   icon: ClipboardList },
         { name: "Invoices & Billing", path: `/dashboard/${restaurantId}/invoices`, icon: Receipt },
+        { name: "Transactions Log",   path: `/dashboard/${restaurantId}/payments`, icon: Coins },
         { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
         { name: "Workspace Staff",    path: `/dashboard/${restaurantId}/staff`,    icon: Users }, // just added this
     ]

@@ -19,6 +19,7 @@ import ReservationsPage from "./modules/reservation/pages/ReservationsPage.jsx"
 import CategoriesPage from "./modules/menu-category/pages/CategoriesPage.jsx"
 import OrdersPage from "./modules/order/pages/OrdersPage.jsx"
 import InvoicesPage from "./modules/invoices/pages/InvoicesPage.jsx"
+import PaymentsPage from "./modules/payments/pages/PaymentsPage.jsx"
 
 
 
@@ -74,6 +75,7 @@ function App() {
 							<Route path="orders" element={<OrdersPage />} />
 
 							<Route path="invoices" element={<InvoicesPage />} />
+							<Route path="payments" element={<PaymentsPage />} />
 
 							<Route path="settings" element={<SettingsPage />}/>
 
