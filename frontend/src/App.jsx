@@ -20,6 +20,7 @@ import CategoriesPage from "./modules/menu-category/pages/CategoriesPage.jsx"
 import OrdersPage from "./modules/order/pages/OrdersPage.jsx"
 import InvoicesPage from "./modules/invoices/pages/InvoicesPage.jsx"
 import PaymentsPage from "./modules/payments/pages/PaymentsPage.jsx"
+import KitchenDisplayPage from "./modules/kitchen/pages/KitchenDisplayPage.jsx"
 
 
 
@@ -60,15 +61,7 @@ function App() {
 							
 							<Route path="categories" element={<CategoriesPage />}/>
 							
-							<Route 
-								path="kitchen" 
-								element={
-								<div className="space-y-2">
-									<h3 className="text-2xl font-black text-white">Kitchen Display</h3>
-									<p className="text-neutral-400 text-sm">See your Kitchen</p>
-								</div>
-								} 
-							/>
+							<Route path="kitchen" element={<KitchenDisplayPage />} />
 							
 							<Route path="tables" element={<TablesPage />} />
 							<Route path="reservations" element={<ReservationsPage />} />
