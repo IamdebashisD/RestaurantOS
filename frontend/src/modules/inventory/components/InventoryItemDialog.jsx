@@ -64,7 +64,7 @@ export default function InventoryItemDialog({
                     costPerUnit: Number(costPerUnit) || 0,
                     status
                 }
-                await api.post(`/restaurants/${restaurantId}/inventory/${editingItem._id}`, payload)
+                await api.patch(`/restaurants/${restaurantId}/inventory/${editingItem._id}`, payload)
             } else {
                 const payload = {
                     name: name.trim(),
