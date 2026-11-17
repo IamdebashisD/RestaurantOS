@@ -91,8 +91,8 @@ export default function InventoryPage() {
             const fetchedMeta = response.data?.data?.meta || {
                 page: 1,
                 limit: 10,
-                totalItems: 0,
-                totalPages: fetchedItems.length,
+                totalItems: fetchedItems.length,
+                totalPages: 1,
                 hasNextPage: false,
                 hasPrevPage: false
             }
