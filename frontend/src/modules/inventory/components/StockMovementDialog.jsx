@@ -27,7 +27,7 @@ const MOVEMENT_CONFIG = {
         reasonPlaceholder: "e.g., Weekly vendor delivery batch"
     },
     STOCK_OUT: {
-        title: "Kitchen stock-out",
+        title: "Kitchen Stock-Out",
         subtitle: "Record daily kitchen consumption and check low-stock thresholds.",
         endpoint: "stock-out",
         method: "patch",
@@ -56,7 +56,7 @@ const MOVEMENT_CONFIG = {
         badgeColor: "text-red-400 bg-red-950/40 border-red-800/50",
         buttonColor: "bg-red-600 hover:bg-red-500",
         icon: Trash2,
-        reasonRequired: false,
+        reasonRequired: true,
         reasonPlaceholder: "e.g., Expired dairy batch / cold storage failure"
     },
 
@@ -81,7 +81,7 @@ export default function StockMovementDialog({
 
     useEffect(() => {
         if (isOpen && item) {
-            setQuantity(movementType === "ADJUSTMENT" ?String(item.currentQuanity ?? 0) : "")
+            setQuantity(movementType === "ADJUSTMENT" ? String(item.currentQuantity ?? 0) : "")
             setCostPerUnit(String(item.costPerUnit ?? 0))
             setReason("")
             setErrorMessage(null)
@@ -93,7 +93,7 @@ export default function StockMovementDialog({
     const numericQty = Number(quantity) || 0
     const projectedQty = 
         movementType === "STOCK_IN"
-            ? Math.round((item.currentQuanity + numericQty) * 100) / 100
+            ? Math.round((item.currentQuantity + numericQty) * 100) / 100
             : movementType === "ADJUSTMENT"
             ? Math.round(numericQty * 100) / 100
             : Math.max(0, Math.round((item.currentQuantity - numericQty) * 100) / 100)
