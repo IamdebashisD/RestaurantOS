@@ -22,6 +22,7 @@ import InvoicesPage from "./modules/invoices/pages/InvoicesPage.jsx"
 import PaymentsPage from "./modules/payments/pages/PaymentsPage.jsx"
 import KitchenDisplayPage from "./modules/kitchen/pages/KitchenDisplayPage.jsx"
 import InventoryPage from "./modules/inventory/pages/InventoryPage.jsx"
+import SuppliersPage from "./modules/suppliers/pages/SuppliersPage.jsx"
 
 
 
@@ -71,6 +72,7 @@ function App() {
 							<Route path="invoices" element={<InvoicesPage />} />
 							<Route path="payments" element={<PaymentsPage />} />
 							<Route path="inventory" element={<InventoryPage />} />
+							<Route path="suppliers" element={<SuppliersPage />} />
 
 							<Route path="settings" element={<SettingsPage />}/>
 
