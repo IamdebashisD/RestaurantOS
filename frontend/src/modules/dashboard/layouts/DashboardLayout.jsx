@@ -16,6 +16,7 @@ import {
     FolderHeart,
     Coins,
     Package,
+    Truck,
 } from "lucide-react"
 
 
@@ -46,6 +47,7 @@ export default function DashboardLayout() {
         { name: "Invoices & Billing", path: `/dashboard/${restaurantId}/invoices`, icon: Receipt },
         { name: "Transactions Log",   path: `/dashboard/${restaurantId}/payments`, icon: Coins },
         { name: "Inventory Stock",    path: `/dashboard/${restaurantId}/inventory`, icon: Package },
+        { name: "Suppliers",          path: `/dashboard/${restaurantId}/suppliers`, icon: Truck },
         { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
         { name: "Workspace Staff",    path: `/dashboard/${restaurantId}/staff`,    icon: Users }, // just added this
     ]
