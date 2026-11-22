@@ -134,7 +134,7 @@ export default function SuppliersPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-800 pb-5">
                 <div>
                     <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                        <Truck className="w-6 h-6 text-emerald-500" />
+                        <Truck className="w-5 h-5 text-emerald-500" />
                         Supplier & Vendor Directory
                     </h2>
                     <p className="text-neutral-400 text-sm mt-1">

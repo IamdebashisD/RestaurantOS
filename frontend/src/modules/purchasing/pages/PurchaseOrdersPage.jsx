@@ -232,7 +232,7 @@ export default function PurchaseOrdersPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-800 pb-5">
                 <div>
                     <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                        <ShoppingBag className="w-6 h-6 text-emerald-500" />
+                        <ShoppingBag className="w-5 h-5 text-emerald-500" />
                         Purchase Orders & Procurement
                     </h2>
                     <p className="text-neutral-400 text-sm mt-1">
