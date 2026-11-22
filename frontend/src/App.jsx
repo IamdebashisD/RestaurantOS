@@ -24,6 +24,7 @@ import KitchenDisplayPage from "./modules/kitchen/pages/KitchenDisplayPage.jsx"
 import InventoryPage from "./modules/inventory/pages/InventoryPage.jsx"
 import SuppliersPage from "./modules/suppliers/pages/SuppliersPage.jsx"
 import PurchaseOrdersPage from "./modules/purchasing/pages/PurchaseOrdersPage.jsx"
+import ReportsPage from "./modules/reports/pages/ReportsPage.jsx"
 
 
 
@@ -75,6 +76,7 @@ function App() {
 							<Route path="inventory" element={<InventoryPage />} />
 							<Route path="suppliers" element={<SuppliersPage />} />
 							<Route path="purchase-orders" element={<PurchaseOrdersPage />} />
+							<Route path="reports" element={<ReportsPage />} />
 
 							<Route path="settings" element={<SettingsPage />}/>
 
