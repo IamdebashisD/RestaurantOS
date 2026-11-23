@@ -19,6 +19,7 @@ import {
     Truck,
     ShoppingBag,
     BarChart3,
+    Bell,
 } from "lucide-react"
 
 
@@ -52,6 +53,7 @@ export default function DashboardLayout() {
         { name: "Suppliers",          path: `/dashboard/${restaurantId}/suppliers`, icon: Truck },
         { name: "Purchase Orders",    path: `/dashboard/${restaurantId}/purchase-orders`, icon: ShoppingBag },
         { name: "Reports & Analytics", path: `/dashboard/${restaurantId}/reports`, icon: BarChart3 },
+        { name: "Notifications",      path: `/dashboard/${restaurantId}/notifications`, icon: Bell },
         { name: "Workspace Settings", path: `/dashboard/${restaurantId}/settings`, icon: Settings },
         { name: "Workspace Staff",    path: `/dashboard/${restaurantId}/staff`,    icon: Users }, // just added this
     ]
