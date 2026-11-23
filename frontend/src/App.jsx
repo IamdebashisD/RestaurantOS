@@ -25,6 +25,7 @@ import InventoryPage from "./modules/inventory/pages/InventoryPage.jsx"
 import SuppliersPage from "./modules/suppliers/pages/SuppliersPage.jsx"
 import PurchaseOrdersPage from "./modules/purchasing/pages/PurchaseOrdersPage.jsx"
 import ReportsPage from "./modules/reports/pages/ReportsPage.jsx"
+import NotificationsPage from "./modules/notifications/pages/NotificationsPage.jsx"
 
 
 
@@ -77,7 +78,7 @@ function App() {
 							<Route path="suppliers" element={<SuppliersPage />} />
 							<Route path="purchase-orders" element={<PurchaseOrdersPage />} />
 							<Route path="reports" element={<ReportsPage />} />
-
+							<Route path="notifications" element={<NotificationsPage />} />
 							<Route path="settings" element={<SettingsPage />}/>
 
 							<Route path="staff" element={<StaffPage />} />
