@@ -256,8 +256,8 @@ export default function NotificationsPage() {
             {/* PANEL HEADER SYSTEM ACTION BLOCK */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-800 pb-5">
                 <div>
-                    <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-                        <Bell className="w-6 h-6 text-emerald-500" />
+                    <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-emerald-500" />
                         Notifications & Alert Center
                         {meta.totalUnread > 0 && (
                             <span className="px-2.5 py-0.5 text-xs font-mono font-black rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400">
