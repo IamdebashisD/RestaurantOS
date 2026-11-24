@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react"
 import { Link, Outlet, useNavigate, useLocation, useParams } from "react-router"
 import { useAuth } from "../../auth/context/AuthContext"
 import {
@@ -21,7 +22,7 @@ import {
     BarChart3,
     Bell,
 } from "lucide-react"
-
+import { api } from "../../../lib/axios"
 
 export default function DashboardLayout() {
     const { user, setUser, activeRestaurant } = useAuth()
@@ -30,6 +31,29 @@ export default function DashboardLayout() {
     const location = useLocation()
 
     const { restaurantId } = useParams()
+
+    const [unreadCount, setUnreadCount] = useState(0)
+
+    const fetchUnreadCount = useCallback(async () => {
+        if (!restaurantId) return
+
+        try {
+            const response = await api.get(`restaurants/${restaurantId}/notifications`, {
+                params: { page: 1, limit: 1 }
+            })
+
+            const count = response.data?.data?.meta?.totalUnread ?? 0
+            setUnreadCount(count)
+        } catch (error) {
+            console.error("[Unread Badge Sync Failed]:", error)
+        }
+    }, [restaurantId])
+
+    useEffect(() => {
+        fetchUnreadCount()
+        const interval = setInterval(fetchUnreadCount, 30000)
+        return () => clearInterval(interval)
+    }, [fetchUnreadCount, location.pathname])
 
     const handleLogout = async () => {
         // ⚡ Future optimization link: execute a clear call to api.post("/auth/signout") here
@@ -92,14 +116,28 @@ export default function DashboardLayout() {
                                 <Link
                                     key={item.path}
                                     to={item.path}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group duration-200 cursor-pointer select-none ${
+                                    className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group duration-200 cursor-pointer select-none ${
                                         isActive 
                                         ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950/40" 
                                         : "text-neutral-400 hover:bg-neutral-800/60 hover:text-white"
                                     }`}
                                 >
-                                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-neutral-400 group-hover:text-emerald-400"}`} />
-                                    {item.name}
+                                    <span className="flex items-center gap-3">
+                                        <Icon className={`w-4 h-4 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-neutral-400 group-hover:text-emerald-400"}`} />
+                                        {item.name}
+                                    </span>
+
+                                    {item.name === "Notifications" && unreadCount > 0 && (
+                                        <span
+                                            className={`px-2 py-0.5 text-[10px] font-mono font-black rounded-full ${
+                                                isActive
+                                                    ? "bg-white text-emerald-900"
+                                                    : "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
+                                            }`}
+                                        >
+                                            {unreadCount > 99 ? "99+" : unreadCount}
+                                        </span>
+                                    )}
                                 </Link>
                             )
                         })}
