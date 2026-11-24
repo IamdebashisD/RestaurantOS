@@ -10,7 +10,8 @@ import {
     CheckCircle2,
     Calendar,
     ClipboardList,
-    Receipt
+    Receipt,
+    Coins
 } from "lucide-react"
 import { useAuth } from "../../../modules/auth/context/AuthContext"
 import { api } from "../../../lib/axios.js"
@@ -26,6 +27,7 @@ export default function SystemConsoleOverview() {
         totalReservations: 0,
         activeOrders: 0,
         pendingInvoices: 0,
+        totalTransactions: 0,
     })
     const [isLoading, setIsLoading] = useState(true)
     const userId = user?.id || user?._id
@@ -38,7 +40,7 @@ export default function SystemConsoleOverview() {
 
             try {
                 // BATCH FETCH DATA: Pull background data properties from your active backend clusters concurrently!
-                const [menuResponse, staffResponse, tablesResponse, reservationsResponse, ordersResponse, invoicesResponse] = await Promise.all([
+                const [menuResponse, staffResponse, tablesResponse, reservationsResponse, ordersResponse, invoicesResponse, paymentsResponse] = await Promise.all([
                     // Future expansion: Add more concurrent API calls here for other metrics like staff, tables, etc.
                     api.get(`/restaurants/${restaurantId}/menu-items`).catch(() => null),
                     api.get(`/restaurants/${restaurantId}/staff`).catch(() => null),
@@ -46,6 +48,7 @@ export default function SystemConsoleOverview() {
                     api.get(`/restaurants/${restaurantId}/reservations`).catch(() => null),
                     api.get(`/restaurants/${restaurantId}/orders`).catch(() => null),
                     api.get(`/restaurants/${restaurantId}/invoices`).catch(() => null),
+                    api.get(`/restaurants/${restaurantId}/payments`).catch(() => null),
                 ])
 
                 const totalDishesFound = menuResponse?.data?.data?.meta?.totalItems 
@@ -70,6 +73,11 @@ export default function SystemConsoleOverview() {
 
                 const liveOrderCount = ordersList.filter(o => ["PENDING", "CONFIRMED", "PREPARING"].includes(o.status?.toUpperCase())).length
                 const pendingInvoicesCount = invoicesList.filter(i => i.status === "ISSUED").length
+
+                const paymentsList = paymentsResponse.data?.data?.payments?.payments 
+                    || paymentsResponse.data?.data?.payments 
+                    || []
+                const totalTransactionsCount = paymentsResponse?.data?.data?.meta?.totalItems ?? paymentsList.length
                 
                 // ATOMIC UPDATE: Commit all values in a single state change to prevent re-render stuttering!
                 setMetrics({
@@ -79,6 +87,7 @@ export default function SystemConsoleOverview() {
                     totalReservations: reservationsList.length,
                     activeOrders: liveOrderCount,
                     pendingInvoices: pendingInvoicesCount,
+                    totalTransactions: totalTransactionsCount,
                 })
                 // Instantly turn off loading state after metrics are fetched and set
                 setIsLoading(false)
@@ -254,6 +263,27 @@ export default function SystemConsoleOverview() {
                     <div className="mt-4 pt-4 border-t border-neutral-800/60 flex items-center justify-between">
                         <Link to={`/dashboard/${restaurantId}/invoices`} className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold inline-flex items-center gap-1 group/link">
                             Audit Financial Dues
+                            <ArrowRight className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Metric Node G: Payment Transactions Log */}
+                <div className="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-neutral-700/60 transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <span className="text-neutral-500 text-xs font-bold uppercase tracking-wider">Transaction Logs</span>
+                            <h3 className="text-4xl font-black text-white font-mono mt-1">
+                                {isLoading ? "..." : metrics.totalTransactions}
+                            </h3>
+                        </div>
+                        <div className="w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-xl flex items-center justify-center text-emerald-400">
+                            <Coins className="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-neutral-800/60 flex items-center justify-between">
+                        <Link to={`/dashboard/${restaurantId}/payments`} className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold inline-flex items-center gap-1 group/link">
+                            Inspect Payment Ledger
                             <ArrowRight className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
                         </Link>
                     </div>
