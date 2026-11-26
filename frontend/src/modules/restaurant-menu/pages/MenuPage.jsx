@@ -8,7 +8,8 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    X
+    X,
+    Pencil
 } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
@@ -31,6 +32,7 @@ export default function MenuPage() {
     const [currentPage, setCurrentPage] = useState(1)
 
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+    const [editingDish, setEditingDish] = useState(null)
 
     const staticCategories = ["ALL", "STARTERS", "MAIN COURSE", "DESSERTS", "BEVERAGES", "FAST FOOD"]
 
@@ -40,7 +42,7 @@ export default function MenuPage() {
         setErrorMessage(null)
         try {
             // URL Query String Mapping: Matches your getRestaurantMenuItemsService structure perfectly!
-            let endpointUrl = `/restaurants/${restaurantId}/menu-items?page=${currentPage}&limit=12&isAvailable=true`
+            let endpointUrl = `/restaurants/${restaurantId}/menu-items?page=${currentPage}&limit=12`
 
             if (activeCategory !== "ALL") {
                 endpointUrl += `&category=${encodeURIComponent(activeCategory.toLowerCase())}`
@@ -108,7 +110,10 @@ export default function MenuPage() {
                     </Button>
 
                     <Button
-                        onClick={() => setIsAddDialogOpen(true)}
+                        onClick={() => {
+                            setEditingDish(null)
+                            setIsAddDialogOpen(true)
+                        }}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2 rounded-xl px-4 py-2 cursor-pointer shadow-lg shadow-emerald-950/20"
                         >
                             <Plus className="w-4 h-4" />
@@ -220,6 +225,17 @@ export default function MenuPage() {
                                     <span className={`font-semibold ${dish.isAvailable ? "text-emerald-400" : "text-amber-500"}`}>
                                         {dish.isAvailable ? "● Live In Kitchen" : "○ Sold Out"}
                                     </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingDish(dish)
+                                            setIsAddDialogOpen(true)
+                                        }}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-300 hover:text-white hover:border-emerald-500/40 transition-colors cursor-pointer font-semibold"
+                                    >
+                                        <Pencil className="w-3 h-3 text-emerald-400" /> Edit
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -260,9 +276,13 @@ export default function MenuPage() {
 
             <AddDishDialog 
                 isOpen={isAddDialogOpen}
-                onClose={() => setIsAddDialogOpen(false)}
+                onClose={() => {
+                    setIsAddDialogOpen(false)
+                    setEditingDish(null)
+                }}
                 onRefreshCatalog={fetchMenuCatalog}
                 categories={dbCategories}
+                editingDish={editingDish}
             />
         </div>
     )
