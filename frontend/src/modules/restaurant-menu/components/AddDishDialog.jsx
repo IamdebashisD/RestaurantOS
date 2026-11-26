@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { X, Store, IndianRupee, Layers, FileText, ArrowRight } from "lucide-react";
 import { Button } from "../../../components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "../../../components/ui/label";
 import { api } from "../../../lib/axios"
 
 
-export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categories = [] }) {
+export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categories = [], editingDish = null }) {
     const { restaurantId } = useParams()
 
     const [formData, setFormData] = useState({
@@ -20,7 +20,36 @@ export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categ
     const [isLoading, setIsLoading] = useState()
     const [errorMessage, setErrorMessage] = useState()
 
-    if (!isOpen) return
+    const isEditMode = !!editingDish
+    // Pre-fill form when editing an existing dish, or reset when creating a new one
+    useEffect(() => {
+        if (isOpen) {
+            if (editingDish) {
+                const resolvedCategoryId = typeof editingDish.category === "object" 
+                    ? editingDish.category?._id 
+                    : editingDish.category || ""
+
+                setFormData({
+                    name: editingDish.name || "",
+                    description: editingDish.description || "",
+                    price: editingDish.price ?? "",
+                    category: resolvedCategoryId,
+                    isAvailable: editingDish.isAvailable ?? true
+                })
+            } else {
+                setFormData({
+                    name: "",
+                    description: "",
+                    price: "",
+                    category: "",
+                    isAvailable: true
+                })
+            }
+            setErrorMessage(null)
+        }
+    }, [isOpen, editingDish])
+
+    if (!isOpen) return null
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -41,20 +70,23 @@ export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categ
         }
 
         try {
-            await api.post(`restaurants/${restaurantId}/menu-items`, menuCreationPayload)
-            setFormData({
-                name: "",
-                description: "",
-                price: "",
-                category: "",
-                isAvailable: true
-            })
+            if (isEditMode) {
+                const dishId = editingDish._id || editingDish.id
+                await api.patch(`/restaurants/${restaurantId}/menu-items/${dishId}`, menuCreationPayload)
+            } else {
+                await api.post(`/restaurants/${restaurantId}/menu-items`, menuCreationPayload)
+            }
+            
             onRefreshCatalog()
             onClose()
         } catch (error) {
+            console.error("[Menu Item Update Failure]:", error.response?.status, error.response?.data || error)
             setErrorMessage(
                 error.response?.data?.message ||
-                "Failed to provision new recipe listing record in backend registries."
+                (isEditMode 
+                    ? "Failed to update menu item record in backend registries." 
+                    : "Failed to provision new recipe listing record in backend registries."
+                )
             )
         } finally {
             setIsLoading(false)
@@ -83,8 +115,14 @@ export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categ
 
                 {/* Dialog Header Branding */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-black text-white tracking-tight">Create Recipe Node</h3>
-                    <p className="text-neutral-400 text-xs mt-1">Deploy a new culinary item listing directly into your kitchen console registries.</p>
+                    <h3 className="text-xl font-black text-white tracking-tight">
+                        {isEditMode ? "Edit Recipe Node" : "Create Recipe Node"}
+                    </h3>
+                    <p className="text-neutral-400 text-xs mt-1">
+                        {isEditMode 
+                           ? "Update pricing, category mapping, description, or live kitchen availability."
+                           : "Deploy a new culinary item listing directly into your kitchen console registries."}
+                    </p>
                 </div>
 
                 {/* ⚠️ Exception Alerts Guard Banner */}
@@ -197,7 +235,11 @@ export default function AddDishDialog({ isOpen, onClose, onRefreshCatalog, categ
                         disabled={isLoading}
                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 mt-2 shadow-lg shadow-emerald-950/20 inline-flex items-center justify-center gap-2 text-sm"
                     >
-                        {isLoading ? "Provisioning Recipe Node..." : "Commit Dish Listing"}
+                        {isLoading ? 
+                            isEditMode 
+                                ? "Updating Recipe Node..." : "Provisioning Recipe Node..." 
+                            : isEditMode 
+                                ? "Save Dish Changes" : "Commit Dish Listing"}
                         {!isLoading && <ArrowRight className="w-4 h-4" />}
                     </Button>
 
