@@ -26,6 +26,7 @@ import SuppliersPage from "./modules/suppliers/pages/SuppliersPage.jsx"
 import PurchaseOrdersPage from "./modules/purchasing/pages/PurchaseOrdersPage.jsx"
 import ReportsPage from "./modules/reports/pages/ReportsPage.jsx"
 import NotificationsPage from "./modules/notifications/pages/NotificationsPage.jsx"
+import LandingPage from "./modules/landing/pages/LandingPage.jsx"
 
 
 
@@ -35,6 +36,7 @@ function App() {
 			<BrowserRouter>
 
 				<Routes>
+					<Route path="/" element={<LandingPage />} />
 					{/* 🔒 1. PUBLIC AUTHENTICATION MODULE PAGES GRID */}
 					<Route element={<AuthLayout />}>
 						<Route path="/signin" element={<SigninPage />} />
@@ -89,7 +91,7 @@ function App() {
 
 
 					{/* 🔄 Wildcard Fallback Interception: Redirects all unmatched URLs straight back to /signin */}
-					<Route path="*" element={<Navigate to="/signin" replace />} />
+					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
 					
 			</BrowserRouter>
